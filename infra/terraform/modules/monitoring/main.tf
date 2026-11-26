@@ -17,7 +17,7 @@ variable "uptime_path" {
 locals {
   api_host = trimprefix(var.api_url, "https://")
   run      = "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"${var.service_name}\""
-  event    = { for e in ["chat_turn", "jira_write", "action_proposed", "usage_limit", "app_check", "client_error", "confluence_read"] : e => "${local.run} AND jsonPayload.event=\"${e}\"" }
+  event    = { for e in ["chat_turn", "jira_write", "action_proposed", "usage_limit", "app_check", "client_error", "confluence_read", "confluence_write"] : e => "${local.run} AND jsonPayload.event=\"${e}\"" }
   metric   = "logging.googleapis.com/user/${var.prefix}"
   rev      = "resource.type=\"cloud_run_revision\" AND resource.label.service_name=\"${var.service_name}\""
 }

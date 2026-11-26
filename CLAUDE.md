@@ -101,7 +101,7 @@ uv run --project backend pytest -q scripts --rootdir scripts -p no:cacheprovider
   storage in `integrations/confluence/storage.py`, section diff in `services/page_diff.py`); templates in
   `agent/templates/confluence/` mirror `docs/metodologia/modelos/` (sync test). Tool sets per turn: `jira`, `docs`,
   `docs_write` (linked + flag), `space` (no link + flag). Records in `users/{uid}/documents/{pageId}` (`/api/v1/documents`,
-  "Docs" tab). Flag `CONFLUENCE_WRITE_ENABLED` (default `false`; local compose `true`). Evals: `evals/datasets/f20_v1.jsonl`.
+  "Docs" tab). Flag `CONFLUENCE_WRITE_ENABLED` (default `false`; prd `true` since 2026-11-26 via `envs/prd.tfvars`; local compose `true`). Evals: `evals/datasets/f20_v1.jsonl`.
 - Target design (agent graph, tools, SSE event schema, Firestore model, API v1) is in
   `docs/modernizacao/03-arquitetura.md`; decisions in `docs/modernizacao/adr/`.
 

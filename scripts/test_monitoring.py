@@ -60,6 +60,11 @@ def test_f20_rt_06_escritas_no_confluence_no_painel() -> None:
     assert 'confluence_writes = { event = "confluence_write"' in MONITORING
     assert "Escritas no Confluence por resultado (F20)" in MONITORING
     assert '"docswrite"]' in MONITORING
+    # `terraform validate` não pega índice inexistente em `local.event`: só o plan falharia.
+    events = re.search(r"event\s*=\s*\{ for e in \[([^\]]*)\]", MONITORING)
+    assert events is not None
+    for used in re.findall(r'event = "(\w+)"', MONITORING):
+        assert f'"{used}"' in events[1], used
     cloud_run = (TF / "modules" / "cloud_run" / "main.tf").read_text()
     assert 'name  = "CONFLUENCE_WRITE_ENABLED"' in cloud_run
     variables = (TF / "variables.tf").read_text()
