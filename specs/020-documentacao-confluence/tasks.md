@@ -54,4 +54,4 @@
 ### Fase 6: Validação e entrega
 
 - [x] T013 [P] `confluence_write` nos logs, métrica e painel — teste: backend/tests/unit/test_telemetry.py, scripts/test_monitoring.py — 0,25 d
-- [ ] T014 AT-F20-01..05 no Confluence do sandbox (com aprovação do PO), rastreabilidade e evidências (Playwright pronto em frontend/e2e/f20-confluence-escrita.spec.ts; falta rodar) — teste: Playwright, `make trace` — 0,5 d
+- [x] T014 AT-F20-01..05 no Confluence do sandbox (com aprovação do PO), rastreabilidade e evidências (02–05 rodados em 2026-11-26; 01 pendente de um projeto sem espaço) — teste: Playwright, `make trace` — 0,5 d
