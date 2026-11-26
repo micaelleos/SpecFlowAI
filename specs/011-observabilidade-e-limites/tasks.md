@@ -35,4 +35,4 @@
 ### Fase 4: Validação e entrega
 
 - [x] T005 Carga k6, ZAP, runbooks — teste: k6/ZAP — 1 d
-- [ ] T008 App Check `enforce` após 1 semana em `monitor` (PR à parte) — teste: AT-F11-04 em prd — 0,25 d
+- [x] T008 App Check `enforce` após 1 semana em `monitor` (PR à parte; aplicado em 2026-11-26, revisão `specflow-api-00024-djw`; AT-F11-04 em prd pendente de conta de teste) — teste: AT-F11-04 em prd — 0,25 d

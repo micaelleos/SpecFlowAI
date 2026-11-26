@@ -14,3 +14,7 @@ prompt_version     = "v2"
 
 # F20 ligada em prd (decisão do PO, 2026-11-26): escrita no Confluence por ação proposta.
 confluence_write_enabled = true
+
+# F11-T008 (2026-11-26): App Check obrigatório. Em `monitor` desde 2026-11-18; desde a 1ª hora,
+# nenhuma requisição sem token válido (docs/runbooks/monitoramento.md).
+app_check_mode = "enforce"
