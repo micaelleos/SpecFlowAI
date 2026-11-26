@@ -11,3 +11,6 @@ deletion_protection     = true
 # F19 ligada em prd (decisão do PO, 2026-11-20): leitura do Confluence e prompt v2 da metodologia.
 confluence_enabled = true
 prompt_version     = "v2"
+
+# F20 ligada em prd (decisão do PO, 2026-11-26): escrita no Confluence por ação proposta.
+confluence_write_enabled = true
