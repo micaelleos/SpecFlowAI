@@ -73,6 +73,8 @@ async function chat(page: Page, request: APIRequestContext, project: string, lin
 
 async function send(page: Page, text: string) {
   await page.getByLabel('Message').fill(text)
+  // Durante a resposta o composer mostra "Stop" e ignora o Enter: espera o turno anterior acabar.
+  await expect(page.getByRole('button', { name: 'Send' })).toBeEnabled({ timeout: 240_000 })
   await page.getByLabel('Message').press('Enter')
 }
 
@@ -132,7 +134,8 @@ test('F20-RF-04 AT-F20-04 não sobrescreve edição de outra pessoa', async ({ p
     { timeout: 60_000 },
   )
   const now = await pageByTitle(request, 'Glossário')
-  expect(now.body.storage.value).toContain('Edição da outra pessoa')
+  // O storage do Confluence vem com entidades HTML (Edi&ccedil;&atilde;o).
+  expect(now.body.storage.value).toContain('da outra pessoa')
   expect(now.body.storage.value).not.toContain('Cupom')
 })
 
