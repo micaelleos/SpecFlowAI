@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Status** | Em validação |
+| **Status** | Em produção |
 | **Fase** | 4 — Evolução |
 | **Responsável** | PO |
 | **Dependências** | F19, F06, F10 |
@@ -162,3 +162,5 @@ Funcionalidade: Documentação no Confluence
 | 2026-11-20 | este PR | Gemini `gemini-3.5-flash-lite`, Confluence simulado | `evals/run.py --prompt v2 --dataset evals/datasets/f20_v1.jsonl` | 1ª rodada 7/8 (pulou o RN-06); com a regra "maior ID + 1" no `WRITE_NOTE`, 8/8 em todas as métricas | — |
 | 2026-11-20 | este PR | idem, Jira e Confluence simulados | `evals/run.py --prompt v2` (F05) e `--dataset evals/datasets/f19_v1.jsonl` | Sem regressão com o prompt v2 alterado (fase 7): F05 e F19 com 100% em todas as métricas | — |
 | 2026-11-26 | `273c717` + correção do E2E | local (emuladores + Gemini `gemini-3.5-flash-lite`) e sandbox Atlassian (espaço SCRUM) | `E2E_REAL_LLM=1 E2E_CONFLUENCE_WRITE=1 E2E_JIRA_WRITE=1 npx playwright test e2e/f20-confluence-escrita.spec.ts` | AT-F20-02, 03, 04 e 05 passaram. AT-02: Constituição gravada só depois do Confirm, com a linha "confirmado por" no Registro de mudanças. AT-03: épico SCRUM-42 criado e Roadmap atualizado com a chave. AT-04: edição de outra pessoa → `confluence-version-conflict`, nada sobrescrito. AT-05: Discard não muda a versão da página. Na 1ª rodada, AT-03 e AT-04 falharam por erro do teste (Enter enviado com o turno ainda em andamento; texto com entidades HTML no storage), não do produto. AT-F20-01 não rodou: o sandbox não tem um projeto do Jira sem espaço | — |
+| 2026-11-26 | `1253013` | prd | — | `make deploy` (API `specflow-api-00022-n7z` e SPA); `confluence_write_enabled = true` por `terraform apply` (PR #41, revisão `specflow-api-00023-2v2`) | PO |
+| 2026-11-26 | — | — | — | **Aceite da F20 pelo PO** (AT-F20-01 fica para quando houver um projeto do Jira sem espaço) | PO |
