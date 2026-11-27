@@ -44,6 +44,8 @@ from app.agent.tools.context import (
 from app.agent.tools.conversation_tools import PIN_TOOL, PIN_TOOLS
 from app.agent.tools.conversation_tools import PROGRESS as PIN_PROGRESS
 from app.agent.tools.jira_tools import JIRA_TOOLS, PROGRESS
+from app.agent.tools.project_tools import PROGRESS as PROJECT_PROGRESS
+from app.agent.tools.project_tools import PROJECT_TOOLS
 from app.agent.tools.repo_tools import PROGRESS as REPO_PROGRESS
 from app.agent.tools.repo_tools import REPO_TOOLS, repo_note
 from app.core.errors import ApiProblemError
@@ -167,12 +169,14 @@ class ChatSettings(Protocol):
 
 # Ferramentas por turno: sem espaço vinculado, o modelo nem vê as do Confluence (F19-RF-04); as de
 # escrita só existem com a flag da F20 (rollback: desligar a flag).
+# F22: criar projeto vem por último em todo toolset com Jira (antes dela, as ferramentas do
+# pedido mais comum; na frente, ela atrapalhava o agente a fixar o projeto da F21 nos evals).
 _BASE_TOOLSETS: dict[str, list[BaseTool]] = {
-    "jira": JIRA_TOOLS,
-    "jira_pin": [*JIRA_TOOLS, *PIN_TOOLS],  # F21: conversa sem projeto
-    "docs": [*JIRA_TOOLS, *CONFLUENCE_TOOLS],
-    "docs_write": [*JIRA_TOOLS, *CONFLUENCE_TOOLS, *PAGE_WRITE_TOOLS],
-    "space": [*JIRA_TOOLS, *SPACE_TOOLS],
+    "jira": [*JIRA_TOOLS, *PROJECT_TOOLS],
+    "jira_pin": [*JIRA_TOOLS, *PIN_TOOLS, *PROJECT_TOOLS],  # F21: conversa sem projeto
+    "docs": [*JIRA_TOOLS, *CONFLUENCE_TOOLS, *PROJECT_TOOLS],
+    "docs_write": [*JIRA_TOOLS, *CONFLUENCE_TOOLS, *PAGE_WRITE_TOOLS, *PROJECT_TOOLS],
+    "space": [*JIRA_TOOLS, *SPACE_TOOLS, *PROJECT_TOOLS],
 }
 # F17-RT-05: cada toolset tem a variante `<nome>_repo`, com as ferramentas do repositório, que só
 # existe no turno com repositório vinculado.
@@ -181,7 +185,7 @@ TOOLSETS: dict[str, list[BaseTool]] = {
     **{f"{name}_repo": [*tools, *REPO_TOOLS] for name, tools in _BASE_TOOLSETS.items()},
 }
 ToolSet = str
-ALL_PROGRESS = {**PROGRESS, **PIN_PROGRESS, **REPO_PROGRESS}
+ALL_PROGRESS = {**PROGRESS, **PIN_PROGRESS, **REPO_PROGRESS, **PROJECT_PROGRESS}
 REPO_UNAVAILABLE_NOTE = (
     "## Repositório do código do projeto\n"
     "O projeto tem um repositório vinculado, mas o GitHub não respondeu (ou recusou o token). Siga "
@@ -570,7 +574,7 @@ class ChatService:
         async def on_auth_error() -> None:
             await self._jira.mark_invalid(uid, usable.id)
 
-        return JiraReaderAdapter(client, on_auth_error), client
+        return JiraReaderAdapter(client, on_auth_error, usable.account_name), client
 
     def _agent_for(self, toolset: ToolSet) -> Agent:
         shared = self._agent if toolset == "jira" else self._agents.get(toolset)

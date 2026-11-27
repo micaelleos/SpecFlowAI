@@ -1,0 +1,127 @@
+{
+ "agent": "new",
+ "model": "gemini-3.5-flash-lite",
+ "prompt_version": "v2",
+ "dataset": "f21_v1.jsonl",
+ "run_at": "2026-11-27T16:49:21+00:00",
+ "summary": {
+  "metrics": {
+   "never_writes_without_proposal": 100.0,
+   "pin_no_guess": 100.0,
+   "pins_named_project": 100.0
+  },
+  "cases": 5,
+  "input_tokens": 92868,
+  "output_tokens": 728
+ },
+ "cases": [
+  {
+   "id": "pin_named_01",
+   "category": "pin_named",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "pins_named_project": true
+   },
+   "tools": [
+    "fixar_projeto_da_conversa",
+    "listar_documentos_do_projeto",
+    "buscar_issues_jql"
+   ],
+   "texts": [
+    "Para começarmos a documentar e planejar as regras de cupom de desconto no projeto **ABC** (Loja Online), preciso entender um pouco melhor o escopo que você tem em mente para essa funcionalidade. \n\nPor favor, me esclareça alguns pontos:\n\n1. **Quais são os tipos de cupom suportados inicialmente?** (Ex.: Desconto percentual, valor fixo em dinheiro, frete grátis, etc.)\n2. **Quais são as regras de aplicação e restrições principais?** (Ex.: Valor mínimo de compra, validade por data, limite de uso por cliente, uso único por pedido, restrição a categorias ou produtos específicos.)\n3. **Você prefere que eu crie um Épico** para abranger toda a iniciativa de cupons de desconto (com a decomposição em histórias menores) **ou deseja criar uma história ou tarefa específica** diretamente para uma primeira entrega?\n\nAssim que me responder, prepararei a proposta completa para você revisar e confirmar no cartão!"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "input_tokens": 26639,
+   "output_tokens": 278,
+   "error": null
+  },
+  {
+   "id": "pin_named_02",
+   "category": "pin_named",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "pins_named_project": true
+   },
+   "tools": [
+    "listar_projetos",
+    "fixar_projeto_da_conversa",
+    "buscar_paginas_confluence"
+   ],
+   "texts": [
+    "Como a conversa agora está fixada no projeto **Loja Online (ABC)**, gostaria de adicionar o termo **Cupom** (\"código que dá desconto no pedido\") ao glossário da documentação.\n\nComo não tenho ferramentas de escrita para o Confluence neste momento, você deseja que eu abra uma **tarefa (task) no Jira** para documentar essa adição no glossário ou prefere que eu formule o texto completo para você atualizar a página do glossário manualmente?"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "input_tokens": 26724,
+   "output_tokens": 157,
+   "error": null
+  },
+  {
+   "id": "pin_named_03",
+   "category": "pin_named",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "pins_named_project": true
+   },
+   "tools": [
+    "fixar_projeto_da_conversa"
+   ],
+   "texts": [
+    "Não tenho permissão para criar ou atualizar páginas diretamente no Confluence. No entanto, sempre que uma issue é criada ou atualizada e há páginas que precisam de revisão (como o Roadmap ou a especificação de arquitetura), eu indico quais páginas ficaram desatualizadas para que você possa atualizá-las.\n\nComo posso ajudar você no planejamento ou nas issues do Jira hoje?",
+    "Pronto, conversa fixada no projeto **ABC (Loja Online)**! \n\nComo posso ajudar você hoje no planejamento, criação ou atualização de issues para este projeto?"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "input_tokens": 19819,
+   "output_tokens": 139,
+   "error": null
+  },
+  {
+   "id": "pin_no_guess_01",
+   "category": "pin_no_guess",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "pin_no_guess": true
+   },
+   "tools": [
+    "fixar_projeto_da_conversa"
+   ],
+   "texts": [
+    "O projeto **XYZ** que você mencionou não foi encontrado na sua conta do Jira. \n\nOs projetos disponíveis no momento são:\n- **ABC** (Loja Online)\n- **FIN** (Financeiro)\n\nDeseja fixar a conversa em um destes projetos ou gostaria de criar o projeto **XYZ** antes?"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "input_tokens": 13147,
+   "output_tokens": 95,
+   "error": null
+  },
+  {
+   "id": "pin_no_guess_02",
+   "category": "pin_no_guess",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "pin_no_guess": true
+   },
+   "tools": [],
+   "texts": [
+    "Para que eu possa registrar termos ou atualizar a documentação no Confluence e no Jira, preciso que esta conversa esteja vinculada a um projeto. \n\nVocê gostaria de fixar esta conversa em algum projeto existente? Se não souber quais são, posso listar os projetos disponíveis para você escolher."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "input_tokens": 6539,
+   "output_tokens": 59,
+   "error": null
+  }
+ ]
+}

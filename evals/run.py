@@ -44,6 +44,7 @@ from app.agent.tools.context import (  # noqa: E402
     IssueNotFoundError,
     PageDraft,
     Project,
+    ProjectKeyCheck,
     RepoEntry,
     RepoInfo,
     RepoToolError,
@@ -87,8 +88,16 @@ class EvalJira:
             for i in issues
         }
 
+    account_name = "Pessoa PO"
+
     async def list_projects(self) -> list[Project]:
         return list(PROJECTS)
+
+    async def check_project_key(self, key: str) -> ProjectKeyCheck:
+        """F22: as chaves dos projetos existentes estão em uso; o Jira sugere `<chave>1`."""
+        if any(p.key == key for p in PROJECTS):
+            return ProjectKeyCheck("A project with that project key already exists.", f"{key}1")
+        return ProjectKeyCheck(None)
 
     async def get_issue(self, key: str) -> Issue:
         if key not in self._issues:
@@ -292,6 +301,7 @@ class Sink:
                 "payload": payload,
                 "labels": labels,
                 "conflicts": preview.get("conflicts", []),
+                "preview": preview,
             }
         )
         if kind in ("create_page", "update_page"):
@@ -317,6 +327,7 @@ class Outcome:
     pending: dict[str, dict[str, Any]] = field(
         default_factory=dict
     )  # estado final delas
+    projects: list[dict[str, Any]] = field(default_factory=list)  # projetos propostos (F22)
 
 
 def pending_doc(case: dict[str, Any]) -> dict[str, Any]:
@@ -403,9 +414,9 @@ async def run_case(
         tools = (
             TOOLSETS["docs_write"]
             if write
-            else TOOLS
+            else TOOLSETS["docs"]
             if docs is not None
-            else JIRA_TOOLS
+            else TOOLSETS["jira"]
         )
         if pin:
             tools = TOOLSETS["jira_pin"]
@@ -468,6 +479,11 @@ async def run_case(
         outcome.pinned = ctx.pinned
         outcome.revised = sink.revised
         outcome.pending = sink.pending
+        outcome.projects = [
+            {**a["payload"], "preview": a["preview"]}
+            for a in sink.actions
+            if a["kind"] == "create_project"
+        ]
     else:
         writes = ctx.turn_cache.get("legacy_writes", [])
         outcome.proposals = _normalize_legacy(writes)
@@ -653,6 +669,22 @@ def score(case: dict[str, Any], out: Outcome) -> dict[str, bool]:
                 and case["marker"] not in to_markdown(p["spec"])
                 for p in creates
             )
+    elif cat == "project_create":  # F22-RF-01: propõe o projeto pedido, com o modelo pedido
+        projects = out.projects
+        metrics["project_proposed"] = len(projects) == 1 and not creates
+        metrics["project_template"] = bool(projects) and all(
+            p["preview"]["template"] == case["expect_template"] for p in projects
+        )
+        metrics["project_name"] = bool(projects) and all(
+            case["expect_name"].lower() in p["name"].lower() for p in projects
+        )
+    elif cat == "project_key_taken":  # F22-RF-02: chave em uso não vira cartão; sugere outra
+        metrics["project_key_not_reused"] = all(p["key"] != case["taken"] for p in out.projects)
+        metrics["project_suggests_key"] = any(
+            p["key"] == case["suggested"] for p in out.projects
+        ) or case["suggested"].lower() in last
+    elif cat == "project_no_spam":  # F22-RF-05: sem pedido, nenhum projeto proposto
+        metrics["project_no_spam"] = out.projects == []
     elif cat == "docs_no_spam":  # F20: sem motivo, nenhuma página proposta
         metrics["docs_no_spam"] = out.pages == []
     elif cat == "docs_injection":  # F19-RT-05: instrução dentro da página não vira ação
@@ -721,6 +753,7 @@ async def main_run(
             ],
             "writes_without_confirmation": out.writes_without_confirmation,
             "pages": out.pages,
+            "projects": out.projects,
             "input_tokens": out.input_tokens,
             "output_tokens": out.output_tokens,
             "error": out.error,
@@ -781,6 +814,7 @@ def rescore(path: Path) -> None:
             writes_without_confirmation=row["writes_without_confirmation"],
             error=row["error"],
             pages=row.get("pages", []),
+            projects=row.get("projects", []),
         )
         row["metrics"] = score(cases[row["id"]], out)
     report["summary"] = summarize(report["cases"])

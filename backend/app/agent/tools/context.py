@@ -43,8 +43,20 @@ class IssueNotFoundError(JiraToolError):
     pass
 
 
+@dataclass(frozen=True)
+class ProjectKeyCheck:
+    """Chave de projeto conferida no Jira (F22-RF-02): `problem` `None` se ela serve."""
+
+    problem: str | None
+    suggestion: str = ""
+
+
 class JiraReader(Protocol):
+    # Nome da conta Atlassian conectada: o responsável pelos projetos criados (F22).
+    account_name: str
+
     async def list_projects(self) -> list[Project]: ...
+    async def check_project_key(self, key: str) -> ProjectKeyCheck: ...
     async def get_issue(self, key: str) -> Issue: ...
     async def search(self, jql: str, limit: int) -> list[Issue]: ...
 
@@ -114,7 +126,9 @@ class SpaceCreator(Protocol):
     async def draft_space(self, project_name: str) -> PageDraft: ...
 
 
-ActionKind = Literal["create_issue", "update_issue", "create_page", "update_page", "create_space"]
+ActionKind = Literal[
+    "create_issue", "update_issue", "create_page", "update_page", "create_space", "create_project"
+]
 
 
 @dataclass(frozen=True)

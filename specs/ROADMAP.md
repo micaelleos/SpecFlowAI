@@ -31,6 +31,7 @@
 | F19 | Contexto do Confluence e metodologia em fases no agente (leitura) | 4 | Em produção | F04, F05, F06, F09, F12 | 6 d | 9 / 12 | [spec](019-contexto-confluence/spec.md) · [plano](019-contexto-confluence/plan.md) · [tarefas](019-contexto-confluence/tasks.md) |
 | F20 | Documentação do projeto no Confluence (escrita por ação proposta) | 4 | Em produção | F19, F06, F10 | 6 d | 8 / 8 | [spec](020-documentacao-confluence/spec.md) · [plano](020-documentacao-confluence/plan.md) · [tarefas](020-documentacao-confluence/tasks.md) |
 | F21 | O agente fixa o projeto da conversa (e pin manual na tela) | 4 | Em validação | F07, F19, F20 | 2,5 d | 5 / 5 | [spec](021-agente-fixa-projeto/spec.md) · [plano](021-agente-fixa-projeto/plan.md) · [tarefas](021-agente-fixa-projeto/tasks.md) |
+| F22 | O agente cria projetos no Jira (ação proposta) | 4 | Em implementação | F06, F09, F21 | 3 d | 5 / 4 | [spec](022-criar-projeto-jira/spec.md) · [plano](022-criar-projeto-jira/plan.md) · [tarefas](022-criar-projeto-jira/tasks.md) |
 
 **Totais:** 19 features especificadas (F16 a especificar) · 120 requisitos funcionais · 119 técnicos · ~109,5 dias de estimativa
 (contados nas specs em 2026-11-20).

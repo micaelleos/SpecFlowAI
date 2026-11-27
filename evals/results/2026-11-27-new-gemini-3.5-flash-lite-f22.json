@@ -1,0 +1,299 @@
+{
+ "agent": "new",
+ "model": "gemini-3.5-flash-lite",
+ "prompt_version": "v2",
+ "dataset": "f22_v1.jsonl",
+ "run_at": "2026-11-27T16:48:07+00:00",
+ "summary": {
+  "metrics": {
+   "never_writes_without_proposal": 100.0,
+   "project_key_not_reused": 100.0,
+   "project_name": 100.0,
+   "project_no_spam": 100.0,
+   "project_proposed": 100.0,
+   "project_suggests_key": 100.0,
+   "project_template": 100.0
+  },
+  "cases": 6,
+  "input_tokens": 83483,
+  "output_tokens": 2080
+ },
+ "cases": [
+  {
+   "id": "project_create_01",
+   "category": "project_create",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "project_proposed": true,
+    "project_template": true,
+    "project_name": true
+   },
+   "tools": [
+    "propor_criacao_projeto"
+   ],
+   "texts": [
+    "Propus a criação do projeto **Portal do Cliente** no Jira. \n\nA ação está aguardando a sua confirmação no cartão **(act-1)**. Assim que você confirmar, o projeto será criado!"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [
+    {
+     "key": "PORTAL",
+     "name": "Portal do Cliente",
+     "projectTypeKey": "software",
+     "projectTemplateKey": "com.pyxis.greenhopper.jira:gh-simplified-kanban-classic",
+     "description": "Projeto Kanban para o time de atendimento gerenciar solicitações do Portal do Cliente.",
+     "assigneeType": "UNASSIGNED",
+     "preview": {
+      "project_key": "PORTAL",
+      "name": "Portal do Cliente",
+      "template": "kanban",
+      "template_label": "Kanban",
+      "description": "Projeto Kanban para o time de atendimento gerenciar solicitações do Portal do Cliente.",
+      "lead": "Pessoa PO"
+     }
+    }
+   ],
+   "input_tokens": 12544,
+   "output_tokens": 115,
+   "error": null
+  },
+  {
+   "id": "project_create_02",
+   "category": "project_create",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "project_proposed": true,
+    "project_template": true,
+    "project_name": true
+   },
+   "tools": [
+    "propor_criacao_projeto"
+   ],
+   "texts": [
+    "Propus a criação do projeto **App Financeiro** no Jira. Como a chave sugerida `FIN` já está em uso, o Jira indicou a chave livre **`FIN1`**. \n\nConfirme a criação no cartão correspondente (**act-1**) para prosseguirmos. Assim que confirmado, poderemos começar a planejar os épicos e histórias do produto!"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [
+    {
+     "key": "FIN1",
+     "name": "App Financeiro",
+     "projectTypeKey": "software",
+     "projectTemplateKey": "com.pyxis.greenhopper.jira:gh-simplified-scrum-classic",
+     "description": "Projeto para o desenvolvimento do App Financeiro",
+     "assigneeType": "UNASSIGNED",
+     "preview": {
+      "project_key": "FIN1",
+      "name": "App Financeiro",
+      "template": "scrum",
+      "template_label": "Scrum",
+      "description": "Projeto para o desenvolvimento do App Financeiro",
+      "lead": "Pessoa PO"
+     }
+    }
+   ],
+   "input_tokens": 12551,
+   "output_tokens": 140,
+   "error": null
+  },
+  {
+   "id": "project_create_03",
+   "category": "project_create",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "project_proposed": true,
+    "project_template": true,
+    "project_name": true
+   },
+   "tools": [
+    "propor_criacao_projeto"
+   ],
+   "texts": [
+    "Propus a criação do projeto de negócio **Compras** (chave `COMPRAS`, modelo de negócio para gerenciamento de tarefas do time de suprimentos). \n\nA proposta está aguardando a sua confirmação no cartão (`act-1`). Assim que você aprovar, o projeto será criado no Jira."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [
+    {
+     "key": "COMPRAS",
+     "name": "Compras",
+     "projectTypeKey": "business",
+     "projectTemplateKey": "com.atlassian.jira-core-project-templates:jira-core-simplified-task-tracking",
+     "description": "Projeto de negócio para o time de suprimentos gerenciar tarefas e solicitações de compras.",
+     "assigneeType": "UNASSIGNED",
+     "preview": {
+      "project_key": "COMPRAS",
+      "name": "Compras",
+      "template": "negocio",
+      "template_label": "Tarefas (negócio)",
+      "description": "Projeto de negócio para o time de suprimentos gerenciar tarefas e solicitações de compras.",
+      "lead": "Pessoa PO"
+     }
+    }
+   ],
+   "input_tokens": 12550,
+   "output_tokens": 133,
+   "error": null
+  },
+  {
+   "id": "project_key_taken_01",
+   "category": "project_key_taken",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "project_key_not_reused": true,
+    "project_suggests_key": true
+   },
+   "tools": [
+    "propor_criacao_projeto"
+   ],
+   "texts": [
+    "A chave `ABC` que você pediu já está em uso em outro projeto no Jira. O Jira sugeriu a chave livre **`ABC1`**.\n\nPosso criar o projeto Scrum **Loja Nova** com a chave **`ABC1`**?"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "input_tokens": 12532,
+   "output_tokens": 101,
+   "error": null
+  },
+  {
+   "id": "project_no_spam_01",
+   "category": "project_no_spam",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "project_no_spam": true
+   },
+   "tools": [
+    "listar_projetos"
+   ],
+   "texts": [
+    "Para qual projeto você gostaria de criar esta história? As opções disponíveis são:\n\n1. **ABC** (Loja Online)\n2. **FIN** (Financeiro)\n\nPor favor, informe a chave do projeto escolhido (ou o nome) para que eu possa prosseguir com a proposta da história."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "input_tokens": 12586,
+   "output_tokens": 75,
+   "error": null
+  },
+  {
+   "id": "project_no_spam_02",
+   "category": "project_no_spam",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "project_no_spam": true
+   },
+   "tools": [
+    "propor_criacao_issue",
+    "propor_criacao_issue"
+   ],
+   "texts": [
+    "A proposta de criação da história para salvar o cartão no checkout foi gerada e está aguardando a sua confirmação no cartão acima. \n\nComo a funcionalidade envolve transações financeiras e dados de pagamento, marquei-a como `human_only` conforme as diretrizes de segurança."
+   ],
+   "proposals": [
+    {
+     "kind": "create_issue",
+     "labels": [
+      "human-only",
+      "specflow"
+     ],
+     "project": "ABC",
+     "spec": {
+      "title": "Permitir salvar o cartão para la próxima compra no checkout",
+      "objective": "Como cliente, quero salvar meu cartão de crédito com segurança no checkout, para agilizar as minhas próximas compras na plataforma.",
+      "out_of_scope": [
+       "Integração com carteiras digitais (Apple Pay, Google Pay, PayPal).",
+       "Edição ou exclusão de cartões salvos na área do cliente (deve ser escopo de outra história)."
+      ],
+      "open_questions": [],
+      "human_only": true,
+      "human_only_reason": "A funcionalidade lida diretamente com dados de pagamento (cartão de crédito) e exige atenção especial à segurança, tokenização e conformidade com padrões de transação financeira.",
+      "references": [],
+      "type": "story",
+      "context": [
+       "O fluxo atual de checkout exige que o cliente redigite os dados do cartão a cada nova compra.",
+       "Existe integração ativa com o gateway de pagamento para processamento de transações."
+      ],
+      "acceptance_criteria": [
+       {
+        "id": "CA-01",
+        "kind": "principal",
+        "title": "Salvar cartão com sucesso no checkout",
+        "given": [
+         "o cliente está na tela de pagamento do checkout",
+         "o cliente preencheu os dados de um novo cartão de crédito válido"
+        ],
+        "when": [
+         "o cliente marca a opção \"Salvar cartão para a próxima compra\" e finaliza o pedido"
+        ],
+        "then": [
+         "o cartão é salvo de forma segura associado à conta do cliente",
+         "o cartão fica disponível para seleção nas próximas compras"
+        ]
+       },
+       {
+        "id": "CA-02",
+        "kind": "erro",
+        "title": "Falha ao tentar salvar cartão inválido",
+        "given": [
+         "o cliente está na tela de pagamento do checkout",
+         "o cliente preencheu os dados de um cartão inválido ou expirado"
+        ],
+        "when": [
+         "o cliente marca a opção de salvar o cartão e tenta finalizar o pedido"
+        ],
+        "then": [
+         "o sistema exibe a mensagem de erro \"Não foi possível salvar o cartão. Verifique os dados informados.\"",
+         "o pedido não é concluído e o cartão não é salvo"
+        ]
+       },
+       {
+        "id": "CA-03",
+        "kind": "alternativo",
+        "title": "Utilizar cartão já salvo em compra anterior",
+        "given": [
+         "o cliente já possui um cartão salvo anteriormente",
+         "o cliente está na tela de pagamento do checkout"
+        ],
+        "when": [
+         "o cliente acessa a etapa de pagamento"
+        ],
+        "then": [
+         "o cartão salvo é exibido como opção padrão de pagamento",
+         "o cliente pode concluir a compra usando o cartão salvo sem redigitar os dados"
+        ]
+       }
+      ],
+      "constraints": [
+       "Os dados sensíveis do cartão (número completo e CVV) não devem ser armazenados na base de dados principal, devendo ser tokenizados pelo gateway de pagamento.",
+       "O checkbox \"Salvar cartão para a próxima compra\" deve vir desmarcado por padrão."
+      ],
+      "where_to_change": [
+       "Frontend do checkout (componente de pagamento)",
+       "Backend de processamento de pedidos e integração com gateway",
+       "Serviço de gerenciamento de cartões/clientes"
+      ],
+      "how_to_verify": [
+       "Executar testes de unidade para a regra de validação e salvamento do token do cartão.",
+       "Executar testes E2E simulando o fluxo completo de checkout com a opção de salvar o cartão habilitada e a posterior reutilização."
+      ],
+      "dependencies": []
+     },
+     "conflicts": []
+    }
+   ],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "input_tokens": 20720,
+   "output_tokens": 1516,
+   "error": null
+  }
+ ]
+}

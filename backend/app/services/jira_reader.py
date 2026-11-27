@@ -7,7 +7,13 @@ conexão como inválida quando o Jira recusa o token no meio da conversa (F04-RF
 from collections.abc import Awaitable, Callable
 
 from app.agent.spec.adf import adf_to_markdown
-from app.agent.tools.context import Issue, IssueNotFoundError, JiraToolError, Project
+from app.agent.tools.context import (
+    Issue,
+    IssueNotFoundError,
+    JiraToolError,
+    Project,
+    ProjectKeyCheck,
+)
 from app.integrations.jira.client import (
     JiraAuthError,
     JiraBadRequestError,
@@ -38,8 +44,14 @@ def _issue(issue: JiraIssue) -> Issue:
 
 
 class JiraReaderAdapter:
-    def __init__(self, client: JiraClient, on_auth_error: Callable[[], Awaitable[None]]) -> None:
+    def __init__(
+        self,
+        client: JiraClient,
+        on_auth_error: Callable[[], Awaitable[None]],
+        account_name: str = "",
+    ) -> None:
         self._client = client
+        self.account_name = account_name
         self._on_auth_error = on_auth_error
         self.auth_failed = False
 
@@ -60,6 +72,15 @@ class JiraReaderAdapter:
             return [Project(p.key, p.name) for p in await self._client.list_projects()]
         except JiraError as exc:
             raise await self._fail(exc) from None
+
+    async def check_project_key(self, key: str) -> ProjectKeyCheck:
+        """F22-RF-02: chave em uso ou inválida volta com uma sugestão de chave livre."""
+        try:
+            problem = await self._client.validate_project_key(key)
+            suggestion = await self._client.suggest_project_key(key) if problem else ""
+        except JiraError as exc:
+            raise await self._fail(exc) from None
+        return ProjectKeyCheck(problem, suggestion)
 
     async def get_issue(self, key: str) -> Issue:
         try:

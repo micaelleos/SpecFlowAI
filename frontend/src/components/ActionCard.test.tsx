@@ -388,3 +388,48 @@ describe('F14-RF-04 refinar uma seção com IA', () => {
     expect(screen.queryByRole('button', { name: /with AI$/ })).toBeNull()
   })
 })
+
+describe('F22-RF-01 F22-RF-03 cartão de criar projeto no Jira', () => {
+  const project: Partial<ProposedAction> = {
+    kind: 'create_project',
+    projectKey: 'LOJA',
+    title: '',
+    labels: [],
+    sections: [],
+    readiness: null,
+    payloadHash: 'hp',
+    project: {
+      key: 'LOJA',
+      name: 'Loja Online',
+      templateLabel: 'Scrum',
+      lead: 'Pessoa PO',
+      description: 'E-commerce',
+    },
+  }
+
+  it('mostra nome, chave, modelo e responsável e só cria no Confirm', async () => {
+    const done: ProposedAction = {
+      ...base,
+      ...project,
+      status: 'done',
+      resultKey: 'LOJA',
+      resultUrl: 'https://demo.atlassian.net/browse/LOJA',
+    }
+    const confirmAction = vi.fn(async () => done)
+    renderCard(project, { confirmAction })
+    const card = screen.getByRole('region', { name: 'Create Jira project LOJA' })
+    for (const text of ['Loja Online', 'LOJA', 'Scrum', 'Pessoa PO (your account)', 'E-commerce'])
+      expect(within(card).getByText(text)).toBeInTheDocument()
+    expect(within(card).queryByRole('button', { name: 'Edit' })).toBeNull()
+    expect(confirmAction).not.toHaveBeenCalled()
+
+    await userEvent.click(within(card).getByRole('button', { name: 'Confirm and create project' }))
+
+    expect(confirmAction).toHaveBeenCalledWith('a1', 'hp')
+    expect(await within(card).findByText(/Created project LOJA/)).toBeInTheDocument()
+    expect(within(card).getByRole('link', { name: 'Open in Jira' })).toHaveAttribute(
+      'href',
+      'https://demo.atlassian.net/browse/LOJA',
+    )
+  })
+})

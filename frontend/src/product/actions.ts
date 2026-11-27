@@ -123,11 +123,24 @@ function doc(action: ApiAction): DocProposal | null {
   }
 }
 
+function newProject(action: ApiAction): ProposedAction['project'] {
+  if (action.kind !== 'create_project') return null
+  const p = action.preview
+  return {
+    key: str(p.project_key) ?? '',
+    name: str(p.name) ?? '',
+    templateLabel: str(p.template_label) ?? '',
+    lead: str(p.lead) ?? '',
+    description: str(p.description) ?? '',
+  }
+}
+
 export function fromApiAction(action: ApiAction): ProposedAction {
   const preview = action.preview
   const result = action.result ?? null
   const docs = doc(action)
   return {
+    project: newProject(action),
     id: action.id,
     kind: action.kind,
     projectKey: str(preview.project_key),

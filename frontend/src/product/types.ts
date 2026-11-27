@@ -229,6 +229,16 @@ export type ActionKind =
   | 'create_page'
   | 'update_page'
   | 'create_space'
+  | 'create_project'
+
+/** Projeto que o agente propõe criar no Jira (F22). */
+export interface NewProject {
+  key: string
+  name: string
+  templateLabel: string
+  lead: string
+  description: string
+}
 
 export const DOC_KINDS: readonly ActionKind[] = ['create_page', 'update_page', 'create_space']
 
@@ -284,6 +294,8 @@ export interface ProposedAction {
   editedBy: 'agent' | 'user'
   /** Hash da versão exibida: a confirmação e a edição o mandam de volta (F14-RT-01). */
   payloadHash: string
+  /** Só em `create_project` (F22). */
+  project?: NewProject | null
 }
 
 /** Mensagem do histórico (F07): o texto em Markdown e os cartões das ações propostas nela. */
