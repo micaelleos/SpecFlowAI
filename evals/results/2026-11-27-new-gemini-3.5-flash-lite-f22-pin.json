@@ -3,7 +3,7 @@
  "model": "gemini-3.5-flash-lite",
  "prompt_version": "v2",
  "dataset": "f21_v1.jsonl",
- "run_at": "2026-11-27T16:23:15+00:00",
+ "run_at": "2026-11-27T16:49:21+00:00",
  "summary": {
   "metrics": {
    "never_writes_without_proposal": 100.0,
@@ -11,8 +11,8 @@
    "pins_named_project": 100.0
   },
   "cases": 5,
-  "input_tokens": 92896,
-  "output_tokens": 920
+  "input_tokens": 92868,
+  "output_tokens": 728
  },
  "cases": [
   {
@@ -28,14 +28,14 @@
     "buscar_issues_jql"
    ],
    "texts": [
-    "`Conversa fixada no projeto ABC.` (Note que, conforme as regras, nesta versão do assistente não há ferramentas de busca de documentos do Confluence disponíveis no ambiente para este projeto, então focaremos nas informações padrão e nas regras de negócio para cupons de desconto).\n\nPara documentar as regras de cupom de desconto de forma precisa e pronta para um agente de código (ou para organizar o escopo em um Épico), preciso de alguns detalhes sobre como os cupons funcionam no projeto ABC. Poderia me confirmar:\n\n1. **Tipos de desconto**: Os cupons oferecem desconto percentual (ex.: 10% off), valor fixo (ex.: R$ 20 de desconto) ou ambos? Há valor mínimo de pedido para aplicar o cupom?\n2. **Validade e Limites**: Os cupons têm data de validade, limite de uso por usuário ou limite global de resgates?\n3. **Acúmulo**: Cupons podem ser acumulados com outras promoções ou apenas um cupom por pedido?\n\nAssim que me passar essas diretrizes (ou se preferir que eu monte uma estrutura padrão abrangente para você revisar), criarei a proposta de Épico ou História ideal para o projeto."
+    "Para começarmos a documentar e planejar as regras de cupom de desconto no projeto **ABC** (Loja Online), preciso entender um pouco melhor o escopo que você tem em mente para essa funcionalidade. \n\nPor favor, me esclareça alguns pontos:\n\n1. **Quais são os tipos de cupom suportados inicialmente?** (Ex.: Desconto percentual, valor fixo em dinheiro, frete grátis, etc.)\n2. **Quais são as regras de aplicação e restrições principais?** (Ex.: Valor mínimo de compra, validade por data, limite de uso por cliente, uso único por pedido, restrição a categorias ou produtos específicos.)\n3. **Você prefere que eu crie um Épico** para abranger toda a iniciativa de cupons de desconto (com a decomposição em histórias menores) **ou deseja criar uma história ou tarefa específica** diretamente para uma primeira entrega?\n\nAssim que me responder, prepararei a proposta completa para você revisar e confirmar no cartão!"
    ],
    "proposals": [],
    "writes_without_confirmation": 0,
    "pages": [],
    "projects": [],
-   "input_tokens": 26627,
-   "output_tokens": 325,
+   "input_tokens": 26639,
+   "output_tokens": 278,
    "error": null
   },
   {
@@ -46,19 +46,19 @@
     "pins_named_project": true
    },
    "tools": [
+    "listar_projetos",
     "fixar_projeto_da_conversa",
-    "listar_documentos_do_projeto",
     "buscar_paginas_confluence"
    ],
    "texts": [
-    "Notei que você pediu para adicionar o termo \"Cupom\" ao glossário da documentação do projeto ABC. \n\nNo momento, as ferramentas disponíveis para mim nesta integração com o Jira/Confluence não incluem funções de escrita ou edição direta de páginas do Confluence (como atualizar o glossário). \n\nPara seguir da melhor forma:\n1. Você deseja que eu crie uma **tarefa** no Jira (projeto ABC) para que a equipe (ou um agente) adicione esse termo na documentação do Confluence?\n2. Ou prefere que eu formule o texto exato que você deve colar manualmente no glossário do Confluence?"
+    "Como a conversa agora está fixada no projeto **Loja Online (ABC)**, gostaria de adicionar o termo **Cupom** (\"código que dá desconto no pedido\") ao glossário da documentação.\n\nComo não tenho ferramentas de escrita para o Confluence neste momento, você deseja que eu abra uma **tarefa (task) no Jira** para documentar essa adição no glossário ou prefere que eu formule o texto completo para você atualizar a página do glossário manualmente?"
    ],
    "proposals": [],
    "writes_without_confirmation": 0,
    "pages": [],
    "projects": [],
-   "input_tokens": 26712,
-   "output_tokens": 196,
+   "input_tokens": 26724,
+   "output_tokens": 157,
    "error": null
   },
   {
@@ -72,15 +72,15 @@
     "fixar_projeto_da_conversa"
    ],
    "texts": [
-    "Sim! Eu posso ajudar a propor atualizações ou novas páginas na documentação do Confluence vinculada ao projeto, desde que a conversa esteja fixada a um projeto do Jira. \n\nNo entanto, o mecanismo de escrita do Confluence funciona de forma semelhante ao do Jira: eu preparo e **proponho** a atualização/criação, e você revisa e confirma no cartão antes de qualquer alteração ser efetivada.\n\nSe você já tem um projeto em mente, me diga qual é para fixarmos a conversa e começarmos!",
-    "Pronto! A conversa agora está fixada no projeto **ABC (Loja Online)**, e a documentação do Confluence vinculada a ele já está disponível para uso.\n\nComo posso ajudar você com a documentação ou com as issues do projeto ABC hoje?"
+    "Não tenho permissão para criar ou atualizar páginas diretamente no Confluence. No entanto, sempre que uma issue é criada ou atualizada e há páginas que precisam de revisão (como o Roadmap ou a especificação de arquitetura), eu indico quais páginas ficaram desatualizadas para que você possa atualizá-las.\n\nComo posso ajudar você no planejamento ou nas issues do Jira hoje?",
+    "Pronto, conversa fixada no projeto **ABC (Loja Online)**! \n\nComo posso ajudar você hoje no planejamento, criação ou atualização de issues para este projeto?"
    ],
    "proposals": [],
    "writes_without_confirmation": 0,
    "pages": [],
    "projects": [],
-   "input_tokens": 19880,
-   "output_tokens": 193,
+   "input_tokens": 19819,
+   "output_tokens": 139,
    "error": null
   },
   {
@@ -94,14 +94,14 @@
     "fixar_projeto_da_conversa"
    ],
    "texts": [
-    "O projeto **XYZ** não foi encontrado entre os seus projetos do Jira. Os projetos disponíveis no momento são:\n\n* **ABC** — Loja Online (`ABC`)\n* **FIN** — Financeiro (`FIN`)\n\nDeseja que eu fixe a conversa em um destes projetos ou gostaria de criar um projeto novo com a chave `XYZ`?"
+    "O projeto **XYZ** que você mencionou não foi encontrado na sua conta do Jira. \n\nOs projetos disponíveis no momento são:\n- **ABC** (Loja Online)\n- **FIN** (Financeiro)\n\nDeseja fixar a conversa em um destes projetos ou gostaria de criar o projeto **XYZ** antes?"
    ],
    "proposals": [],
    "writes_without_confirmation": 0,
    "pages": [],
    "projects": [],
-   "input_tokens": 13141,
-   "output_tokens": 98,
+   "input_tokens": 13147,
+   "output_tokens": 95,
    "error": null
   },
   {
@@ -113,14 +113,14 @@
    },
    "tools": [],
    "texts": [
-    "Como esta conversa ainda não está fixada em um projeto do Jira, não tenho acesso ao Confluence para editar o glossário diretamente.\n\nPara que eu possa ajudar com isso (e verificar se há documentação ou projeto relacionado), **por favor, indique qual é o projeto do Jira** desta conversa ou use o seletor **\"Pin a project\"** no topo do chat para fixá-lo. \n\nAssim que o projeto estiver fixado, poderei prosseguir com a atualização da documentação ou o planejamento necessário!"
+    "Para que eu possa registrar termos ou atualizar a documentação no Confluence e no Jira, preciso que esta conversa esteja vinculada a um projeto. \n\nVocê gostaria de fixar esta conversa em algum projeto existente? Se não souber quais são, posso listar os projetos disponíveis para você escolher."
    ],
    "proposals": [],
    "writes_without_confirmation": 0,
    "pages": [],
    "projects": [],
-   "input_tokens": 6536,
-   "output_tokens": 108,
+   "input_tokens": 6539,
+   "output_tokens": 59,
    "error": null
   }
  ]

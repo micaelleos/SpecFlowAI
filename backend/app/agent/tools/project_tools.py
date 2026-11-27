@@ -35,11 +35,14 @@ async def propor_criacao_projeto(
     config: RunnableConfig,
     modelo: Template = "scrum",
     descricao: Annotated[str, Field(max_length=500)] = "",
+    chave_escolhida_pelo_usuario: bool = False,
 ) -> str:
     """Propõe criar um projeto no Jira; o usuário confirma no cartão antes de qualquer criação.
     Use SÓ quando o usuário pedir para criar um projeto. `chave`: 2 a 10 letras maiúsculas ou
     dígitos, começando por letra, derivada do nome (ex.: "Loja Online" → "LOJA"). `modelo`:
-    "scrum" (padrão), "kanban" ou "negocio" (tarefas de áreas de negócio)."""
+    "scrum" (padrão), "kanban" ou "negocio" (tarefas de áreas de negócio).
+    `chave_escolhida_pelo_usuario`: true só se o usuário disse a chave; se for false e ela estiver
+    em uso, a proposta sai com a chave livre que o Jira sugerir."""
     ctx = tool_context(config)
     if ctx.jira is None:
         return "O Jira não está conectado: peça para o usuário conectar em Settings."
@@ -55,13 +58,20 @@ async def propor_criacao_projeto(
         check = await ctx.jira.check_project_key(key)
     except JiraToolError as exc:
         return f"Não foi possível conferir a chave no Jira: {exc}"
-    if check.problem:
+    replaced = key
+    if check.problem and not chave_escolhida_pelo_usuario and check.suggestion:
+        # F22-RF-02: a chave foi do agente; o cartão mostra a sugerida e o usuário confirma.
+        replaced, key = key, check.suggestion
+        if not KEY.match(key) or (await ctx.jira.check_project_key(key)).problem:
+            return (
+                f'A chave "{replaced}" está em uso e a sugestão do Jira não serve. Escolha outra.'
+            )
+    elif check.problem:
         hint = f' Chave livre sugerida pelo Jira: "{check.suggestion}".' if check.suggestion else ""
         return (
             f'A chave "{key}" não pode ser usada: {check.problem}.{hint} Nenhum cartão foi '
-            "criado. Se foi você quem escolheu a chave, proponha de novo já com a sugerida; se "
-            "o usuário pediu essa chave, diga que ela está em uso e pergunte se pode usar a "
-            "sugerida."
+            "criado: diga ao usuário que a chave que ele pediu está em uso e pergunte se pode "
+            "usar a sugerida."
         )
     type_key, template_key, label = TEMPLATES[modelo]
     payload = {
@@ -82,9 +92,15 @@ async def propor_criacao_projeto(
     }
     action = await ctx.actions.propose("create_project", payload, {}, [], preview)
     ctx.proposed.append(action)
+    swapped = (
+        f' A chave "{replaced}" está em uso; o cartão usa "{key}", sugerida pelo Jira: avise o '
+        "usuário."
+        if key != replaced
+        else ""
+    )
     return (
         f'Proposta de criar o projeto {key} ("{name}", {label}) pronta no cartão '
-        f"(ação {action.id}). Nada foi criado: o usuário confirma ou recusa no cartão."
+        f"(ação {action.id}). Nada foi criado: o usuário confirma ou recusa no cartão.{swapped}"
     )
 
 

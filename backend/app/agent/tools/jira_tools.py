@@ -36,7 +36,6 @@ from app.agent.tools.context import (
     ToolContext,
     tool_context,
 )
-from app.agent.tools.project_tools import PROJECT_TOOLS
 
 MAX_RESULTS = 50
 MAX_DESCRIPTION = 2000  # F05-RT-04
@@ -608,6 +607,5 @@ JIRA_TOOLS: list[BaseTool] = [
     propor_atualizacao_issue,
     ler_proposta,
     revisar_proposta,
-    *PROJECT_TOOLS,  # F22
 ]
 TOOLS: list[BaseTool] = [*JIRA_TOOLS, *CONFLUENCE_TOOLS]

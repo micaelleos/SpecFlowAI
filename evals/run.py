@@ -414,9 +414,9 @@ async def run_case(
         tools = (
             TOOLSETS["docs_write"]
             if write
-            else TOOLS
+            else TOOLSETS["docs"]
             if docs is not None
-            else JIRA_TOOLS
+            else TOOLSETS["jira"]
         )
         if pin:
             tools = TOOLSETS["jira_pin"]
