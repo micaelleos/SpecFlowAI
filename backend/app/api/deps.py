@@ -28,6 +28,7 @@ from app.repositories.project_links import ProjectLinkRepository
 from app.repositories.usage import UsageRepository
 from app.repositories.users import UserRepository
 from app.services.account import AccountService
+from app.services.action_edits import ActionEditService
 from app.services.actions import ActionService
 from app.services.chat import ChatService, shared_agent
 from app.services.confluence_actions import ConfluenceActionExecutor
@@ -200,6 +201,14 @@ def get_action_service(
     return ActionService(ActionRepository(db), jira, settings, docs=docs)
 
 
+def get_action_edit_service(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> ActionEditService:
+    """Edição da proposta antes da confirmação (F14); não escreve no Jira."""
+    db = _firestore(settings.gcp_project, settings.firestore_database)
+    return ActionEditService(ActionRepository(db))
+
+
 def _bearer(authorization: str | None) -> str:
     scheme, _, token = (authorization or "").partition(" ")
     if scheme.lower() != "bearer" or not token.strip():
@@ -255,6 +264,7 @@ Account = Annotated[AccountService, Depends(get_account_service)]
 JiraConnections = Annotated[JiraConnectionService, Depends(get_jira_service)]
 Chat = Annotated[ChatService, Depends(get_chat_service)]
 Actions = Annotated[ActionService, Depends(get_action_service)]
+ActionEdits = Annotated[ActionEditService, Depends(get_action_edit_service)]
 Conversations = Annotated[ConversationService, Depends(get_conversation_service)]
 JiraProjects = Annotated[JiraProjectService, Depends(get_jira_project_service)]
 ConfluenceLinks = Annotated[ConfluenceLinkService, Depends(get_confluence_link_service)]

@@ -46,6 +46,8 @@ from app.agent.tools.jira_tools import JIRA_TOOLS, PROGRESS
 from app.core.errors import ApiProblemError
 from app.core.logging import uid_hash
 from app.core.telemetry import in_thread
+from app.repositories.actions import Decide
+from app.services.action_edits import ActionEditService
 from app.services.actions import ActionResult, DocResult, describe, to_out
 from app.services.chat_events import (
     ActionProposedEvent,
@@ -112,6 +114,8 @@ class ChatStore(Protocol):
     def list_actions(self, uid: str, conversation_id: str) -> list[dict[str, Any]]: ...
     def set_title_if_auto(self, uid: str, conversation_id: str, title: str) -> bool: ...
     def pin_project(self, uid: str, conversation_id: str, project_key: str) -> str | None: ...
+    def get_action(self, uid: str, action_id: str) -> dict[str, Any] | None: ...
+    def transition(self, uid: str, action_id: str, decide: Decide) -> dict[str, Any] | None: ...
     def add_usage(self, uid: str, day: str, input_tokens: int, output_tokens: int) -> None: ...
 
 
@@ -342,6 +346,25 @@ class FirestoreActionSink:
             },
         )
         return ProposedAction(action_id, kind, preview)
+
+    async def read(self, action_id: str) -> dict[str, Any] | None:
+        """Só ações desta conversa (F14-RF-05)."""
+        doc = await in_thread(self._store.get_action, self._uid, action_id)
+        if doc is None or doc.get("conversationId") != self._conversation_id:
+            return None
+        return doc
+
+    async def revise(self, action_id: str, spec: Any, priority: str | None) -> dict[str, Any] | str:
+        """Revisão pelo agente na mesma ação (F14-RF-04): mesma regra da edição na tela."""
+        if await self.read(action_id) is None:
+            return "a proposta não existe nesta conversa"
+        try:
+            out = await ActionEditService(self._store, self._clock).save(
+                self._uid, action_id, spec, priority, None, by="agent"
+            )
+        except ApiProblemError as exc:
+            return exc.detail or exc.title
+        return out.model_dump(mode="json")
 
 
 class _Pinner:

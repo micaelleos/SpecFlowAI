@@ -14,14 +14,15 @@ from pydantic import BaseModel, Field, StringConstraints
 
 from app.agent.spec.jira_payload import ISSUE_TYPES, create_payload, update_payload
 from app.agent.spec.parse import parse_issue
+from app.agent.spec.proposal import OWN_LABELS
+from app.agent.spec.proposal import readiness_dict as _readiness_dict
+from app.agent.spec.proposal import spec_preview as _preview
 from app.agent.spec.readiness import (
-    LABEL_SPECFLOW,
     Readiness,
     evaluate,
     labels_for,
     sensitive_terms_in,
 )
-from app.agent.spec.render import section_markdown, to_markdown
 from app.agent.spec.schema import EpicSpec, IssueKey, Title, WorkItemSpec
 from app.agent.tools.confluence_tools import CONFLUENCE_TOOLS, seen_ids
 from app.agent.tools.confluence_tools import PROGRESS as CONFLUENCE_PROGRESS
@@ -54,6 +55,8 @@ PROGRESS = {
     "propor_criacao_issue": "Preparando a proposta de criação…",
     "propor_criacao_epico": "Preparando a proposta do épico…",
     "propor_atualizacao_issue": "Preparando a proposta de atualização…",
+    "ler_proposta": "Lendo a proposta…",
+    "revisar_proposta": "Revisando a proposta…",
     **CONFLUENCE_PROGRESS,
     **WRITE_PROGRESS,
 }
@@ -100,23 +103,6 @@ async def _projects(ctx: ToolContext) -> list[Project]:
         ctx.turn_cache["projects"] = await ctx.jira.list_projects()
     projects: list[Project] = ctx.turn_cache["projects"]
     return projects
-
-
-def _readiness_dict(readiness: Readiness) -> dict[str, Any]:
-    return {
-        "ready": readiness.ready,
-        "config_version": readiness.config_version,
-        "rules": [
-            {
-                "id": r.id,
-                "label": r.label,
-                "severity": r.severity.value,
-                "passed": r.passed,
-                "detail": r.detail,
-            }
-            for r in readiness.results
-        ],
-    }
 
 
 def _readiness_text(readiness: Readiness) -> str:
@@ -301,21 +287,6 @@ def _before(current: Issue, payload: dict[str, Any]) -> dict[str, Any]:
     if "labels" in payload:
         before["labels"] = sorted(current.labels)
     return before
-
-
-def _preview(
-    spec: WorkItemSpec | EpicSpec | None, readiness: Readiness | None, labels: list[str]
-) -> dict[str, Any]:
-    preview: dict[str, Any] = {"labels": labels}
-    if spec is not None and readiness is not None:
-        preview |= {
-            "issue_type": ISSUE_TYPES[spec.type],
-            "summary": spec.title,
-            "markdown": to_markdown(spec),
-            "sections": section_markdown(spec),
-            "readiness": _readiness_dict(readiness),
-        }
-    return preview
 
 
 async def _check_project(ctx: ToolContext, project_key: str) -> str | None:
@@ -520,8 +491,7 @@ async def propor_atualizacao_issue(
     readiness = evaluate(new_spec) if new_spec is not None else None
     if new_spec is not None and readiness is not None:
         # Labels do SpecFlow recalculadas; as outras labels da issue são mantidas.
-        own = {LABEL_SPECFLOW, "agent-ready", "human-only"}
-        base = labels if labels is not None else [x for x in current.labels if x not in own]
+        base = labels if labels is not None else [x for x in current.labels if x not in OWN_LABELS]
         labels = sorted({*base, *labels_for(new_spec, readiness)})
     payload = update_payload(key, new_spec, priority, labels, summary)
     preview = _preview(new_spec, readiness, labels or []) | {
@@ -552,6 +522,79 @@ async def propor_atualizacao_issue(
     )
 
 
+# ------------------------------------------------------------------ propostas pendentes (F14)
+
+ActionId = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_-]{1,64}$")]
+
+
+@tool
+async def ler_proposta(action_id: ActionId, config: RunnableConfig) -> str:
+    """Lê a versão atual de uma proposta (cartão) desta conversa: a spec inteira, o estado e se o
+    usuário a editou. Use antes de revisar uma proposta ou de responder sobre o conteúdo dela; a
+    versão editada pelo usuário vale sobre o que você propôs."""
+    doc = await tool_context(config).actions.read(action_id)
+    if doc is None:
+        return f"A proposta {action_id} não existe nesta conversa."
+    payload = doc.get("payload") or {}
+    data = {
+        "id": action_id,
+        "kind": doc.get("kind"),
+        "status": doc.get("status"),
+        "version": doc.get("version") or 1,
+        "edited_by_user": doc.get("editedBy") == "user",
+        "project_key": payload.get("project_key"),
+        "issue_key": payload.get("issue_key"),
+        "priority": payload.get("priority"),
+        "spec": payload.get("spec"),
+    }
+    note = (
+        "O usuário editou esta proposta: mantenha as mudanças dele ao revisar."
+        if data["edited_by_user"]
+        else ""
+    )
+    return json.dumps(data, ensure_ascii=False, indent=1) + (f"\n{note}" if note else "")
+
+
+class ReviseArgs(BaseModel):
+    action_id: ActionId = Field(description="Id da proposta pendente (ex.: o do estado das ações)")
+    spec: WorkItemSpec | None = Field(
+        default=None, description="A história/tarefa inteira, com a seção revisada"
+    )
+    epic_spec: EpicSpec | None = Field(
+        default=None, description="Para uma proposta de épico: o épico inteiro revisado"
+    )
+    priority: Priority | None = Field(default=None, description="Só se o usuário pedir")
+
+
+@tool(args_schema=ReviseArgs)
+async def revisar_proposta(
+    action_id: str,
+    config: RunnableConfig,
+    spec: WorkItemSpec | None = None,
+    epic_spec: EpicSpec | None = None,
+    priority: str | None = None,
+) -> str:
+    """Revisa uma proposta PENDENTE desta conversa no mesmo cartão (não cria outro), por exemplo
+    quando o usuário pede "Refine the section ... of proposal ...". Leia antes com `ler_proposta`,
+    mude só o que foi pedido e mantenha o resto, inclusive as edições do usuário. NÃO cria nem
+    atualiza nada no Jira: o usuário ainda confirma no cartão."""
+    ctx = tool_context(config)
+    new_spec: WorkItemSpec | EpicSpec | None = spec or epic_spec
+    if new_spec is None:
+        return "Informe a spec (ou epic_spec) inteira, com a seção revisada."
+    if problem := _gherkin_problem(new_spec):
+        return problem
+    result = await ctx.actions.revise(action_id, _references_ok(ctx, new_spec), priority)
+    if isinstance(result, str):
+        return f"A proposta {action_id} não foi revisada: {result}"
+    ready = (result.get("readiness") or {}).get("ready")
+    return (
+        f"Proposta {action_id} revisada no mesmo cartão (versão {result.get('version')}); "
+        f"prontidão: {'pronta' if ready else 'NÃO pronta'}. O usuário ainda precisa confirmar; "
+        "não diga que a issue foi criada ou atualizada."
+    )
+
+
 # Sem espaço do Confluence vinculado, o modelo nem vê as ferramentas dele (F19-RF-04).
 JIRA_TOOLS: list[BaseTool] = [
     listar_projetos,
@@ -562,5 +605,7 @@ JIRA_TOOLS: list[BaseTool] = [
     propor_criacao_issue,
     propor_criacao_epico,
     propor_atualizacao_issue,
+    ler_proposta,
+    revisar_proposta,
 ]
 TOOLS: list[BaseTool] = [*JIRA_TOOLS, *CONFLUENCE_TOOLS]
