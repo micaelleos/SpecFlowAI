@@ -1,5 +1,13 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { type FormEvent, type KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react'
+import {
+  type FormEvent,
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 
 import { ChatMarkdown, StreamingMarkdown } from '../chat/ChatMarkdown'
@@ -89,10 +97,12 @@ export function ChatPage() {
     void send(conversationId, text, conversationId ? null : projectKey)
   }
   // "Refine with AI" num cartão (F14-RF-04): a instrução vai ao agente como mensagem desta conversa.
-  const refine =
-    conversationId && product.features.chat && !busy
-      ? (text: string) => void send(conversationId, text, null)
-      : null
+  const canRefine = Boolean(conversationId) && product.features.chat && !busy
+  const refine = useMemo(
+    () =>
+      canRefine && conversationId ? (text: string) => void send(conversationId, text, null) : null,
+    [canRefine, conversationId, send],
+  )
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     // Enter envia; Shift+Enter quebra a linha (F08-RF-01).
     if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
