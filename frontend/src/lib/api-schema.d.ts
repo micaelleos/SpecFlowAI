@@ -215,6 +215,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/github/connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Minha conexão com o GitHub (sem o token) */
+        get: operations["list_connections_api_v1_github_connections_get"];
+        put?: never;
+        /** Valida o token fine-grained no GitHub e guarda a conexão (token cifrado) */
+        post: operations["connect_api_v1_github_connections_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/github/connections/{connection_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a conexão e todos os vínculos de repositório */
+        delete: operations["disconnect_api_v1_github_connections__connection_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/github/connections/{connection_id}/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Testa o token guardado; se o GitHub recusar, a conexão fica inválida */
+        post: operations["validate_api_v1_github_connections__connection_id__validate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/github/repos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Repositórios que o token vê (até 50), filtrados pelo nome */
+        get: operations["list_repos_api_v1_github_repos_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/jira/connections": {
         parameters: {
             query?: never;
@@ -350,6 +419,25 @@ export interface paths {
         post?: never;
         /** Desvincula o espaço do Confluence (nada muda no Confluence) */
         delete: operations["delete_link_api_v1_jira_projects__key__confluence_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jira/projects/{key}/repo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Repositório vinculado ao projeto */
+        get: operations["get_repo_api_v1_jira_projects__key__repo_get"];
+        /** Vincula o projeto a um repositório que o token vê (confere o acesso antes) */
+        put: operations["put_repo_api_v1_jira_projects__key__repo_put"];
+        post?: never;
+        /** Desvincula o repositório (nada muda no GitHub) */
+        delete: operations["delete_repo_api_v1_jira_projects__key__repo_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -761,6 +849,36 @@ export interface components {
              */
             type: "epic";
         };
+        /** GitHubConnectionInput */
+        GitHubConnectionInput: {
+            /**
+             * Token
+             * Format: password
+             */
+            token: string;
+        };
+        /**
+         * GitHubConnectionOut
+         * @description Nunca o token: o login e os 4 últimos caracteres (F17-RT-01).
+         */
+        GitHubConnectionOut: {
+            /** Id */
+            id: string;
+            /**
+             * Last Validated At
+             * Format: date-time
+             */
+            last_validated_at: string;
+            /** Login */
+            login: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "invalid";
+            /** Token Hint */
+            token_hint: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -983,6 +1101,12 @@ export interface components {
             link: components["schemas"]["ConfluenceLinkOut"] | null;
             suggestion: components["schemas"]["ConfluenceSuggestionOut"] | null;
         };
+        /** ProjectRepoOut */
+        ProjectRepoOut: {
+            /** Connected */
+            connected: boolean;
+            link: components["schemas"]["RepoLinkOut"] | null;
+        };
         /**
          * ProposalPreview
          * @description O cartão como ficaria com a edição, sem gravar (F14-RT-03).
@@ -1006,6 +1130,36 @@ export interface components {
         Reference: {
             /** Title */
             title: string;
+            /** Url */
+            url: string;
+        };
+        /** RepoLinkInput */
+        RepoLinkInput: {
+            /** Full Name */
+            full_name: string;
+        };
+        /** RepoLinkOut */
+        RepoLinkOut: {
+            /**
+             * Linked At
+             * Format: date-time
+             */
+            linked_at: string;
+            repo: components["schemas"]["RepoOut"];
+        };
+        /** RepoOut */
+        RepoOut: {
+            /** Default Branch */
+            default_branch: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /** Full Name */
+            full_name: string;
+            /** Private */
+            private: boolean;
             /** Url */
             url: string;
         };
@@ -1862,6 +2016,193 @@ export interface operations {
             };
         };
     };
+    list_connections_api_v1_github_connections_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-Firebase-AppCheck"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GitHubConnectionOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    connect_api_v1_github_connections_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-Firebase-AppCheck"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GitHubConnectionInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GitHubConnectionOut"];
+                };
+            };
+            /** @description Já existe uma conexão */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `github-invalid-token`: o GitHub recusou o token */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description GitHub inacessível */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    disconnect_api_v1_github_connections__connection_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-Firebase-AppCheck"?: string | null;
+            };
+            path: {
+                connection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validate_api_v1_github_connections__connection_id__validate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-Firebase-AppCheck"?: string | null;
+            };
+            path: {
+                connection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GitHubConnectionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_repos_api_v1_github_repos_get: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: {
+                authorization?: string | null;
+                "X-Firebase-AppCheck"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepoOut"][];
+                };
+            };
+            /** @description GitHub não conectado */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_connections_api_v1_jira_connections_get: {
         parameters: {
             query?: never;
@@ -2251,6 +2592,124 @@ export interface operations {
         };
     };
     delete_link_api_v1_jira_projects__key__confluence_delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-Firebase-AppCheck"?: string | null;
+            };
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_repo_api_v1_jira_projects__key__repo_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-Firebase-AppCheck"?: string | null;
+            };
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectRepoOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_repo_api_v1_jira_projects__key__repo_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-Firebase-AppCheck"?: string | null;
+            };
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RepoLinkInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepoLinkOut"];
+                };
+            };
+            /** @description O token não vê o repositório */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description GitHub não conectado */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_repo_api_v1_jira_projects__key__repo_delete: {
         parameters: {
             query?: never;
             header?: {

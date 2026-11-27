@@ -147,6 +147,41 @@ class ActionSink(Protocol):
         ...
 
 
+@dataclass(frozen=True)
+class RepoInfo:
+    full_name: str
+    url: str
+    default_branch: str
+
+
+@dataclass(frozen=True)
+class RepoEntry:
+    path: str
+    type: str  # "blob" (arquivo) ou "tree" (pasta)
+    size: int = 0
+
+
+class RepoToolError(Exception):
+    """Falha ao ler o repositório; a mensagem vai ao modelo (nunca contém o token)."""
+
+
+class RepoReader(Protocol):
+    """Repositório GitHub vinculado ao projeto da conversa, só leitura (F17, ADR-010)."""
+
+    @property
+    def info(self) -> RepoInfo: ...
+
+    async def entries(self) -> tuple[list[RepoEntry], bool]:
+        """A árvore do branch padrão e se ela veio truncada."""
+        ...
+
+    async def read(self, path: str) -> str: ...
+
+    async def search_code(self, text: str, limit: int) -> list[str]:
+        """Caminhos pela busca de código do GitHub; lista vazia se ela não responder."""
+        ...
+
+
 class ConversationPinner(Protocol):
     """Fixa o projeto da conversa (F21). Devolve o projeto que ficou na conversa (o pedido ou o
     que já estava); nunca troca um projeto já fixado."""
@@ -165,6 +200,8 @@ class ToolContext:
     # Escrita por ação proposta (F20); `None` com a flag desligada ou sem vínculo/espaço livre.
     docs_writer: DocsWriter | None = None
     space_creator: SpaceCreator | None = None
+    # Repositório vinculado ao projeto (F17); `None` sem vínculo, sem conexão ou token recusado.
+    repo: RepoReader | None = None
     # F21: só em conversa sem projeto; `pinned` guarda o projeto fixado neste turno.
     pinner: ConversationPinner | None = None
     pinned: str | None = None

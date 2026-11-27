@@ -11,7 +11,7 @@ import time
 from collections.abc import AsyncGenerator, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Any, Literal, Protocol, cast
+from typing import Any, Protocol, cast
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import (
@@ -37,15 +37,19 @@ from app.agent.tools.context import (
     ConfluenceToolError,
     DocsWriter,
     ProposedAction,
+    RepoToolError,
     SpaceCreator,
     ToolContext,
 )
 from app.agent.tools.conversation_tools import PIN_TOOL, PIN_TOOLS
 from app.agent.tools.conversation_tools import PROGRESS as PIN_PROGRESS
 from app.agent.tools.jira_tools import JIRA_TOOLS, PROGRESS
+from app.agent.tools.repo_tools import PROGRESS as REPO_PROGRESS
+from app.agent.tools.repo_tools import REPO_TOOLS, repo_note
 from app.core.errors import ApiProblemError
 from app.core.logging import uid_hash
 from app.core.telemetry import in_thread
+from app.integrations.github.client import GitHubClient
 from app.repositories.actions import Decide
 from app.services.action_edits import ActionEditService
 from app.services.actions import ActionResult, DocResult, describe, to_out
@@ -62,6 +66,7 @@ from app.services.chat_events import (
 from app.services.conversation_title import generate_title, provisional_title
 from app.services.jira_connections import JiraConnectionService
 from app.services.jira_reader import JiraReaderAdapter
+from app.services.repo_reader import GitHubRepoReader
 from app.services.usage import UsageService, usage_day
 
 log = logging.getLogger("app.chat")
@@ -138,6 +143,16 @@ class DocsLinks(Protocol):
     ) -> tuple[SpaceCreator, Closable] | None: ...
 
 
+class RepoLinks(Protocol):
+    """Repositório vinculado ao projeto (F17); `GitHubService` implementa."""
+
+    async def linked(
+        self, uid: str, project_key: str
+    ) -> tuple[GitHubClient, dict[str, Any], dict[str, Any]] | None: ...
+
+    async def mark_invalid(self, uid: str, current: dict[str, Any]) -> Any: ...
+
+
 class ChatSettings(Protocol):
     llm_model: str
     prompt_version: str
@@ -152,14 +167,27 @@ class ChatSettings(Protocol):
 
 # Ferramentas por turno: sem espaço vinculado, o modelo nem vê as do Confluence (F19-RF-04); as de
 # escrita só existem com a flag da F20 (rollback: desligar a flag).
-ToolSet = Literal["jira", "jira_pin", "docs", "docs_write", "space"]
-TOOLSETS: dict[str, list[BaseTool]] = {
+_BASE_TOOLSETS: dict[str, list[BaseTool]] = {
     "jira": JIRA_TOOLS,
     "jira_pin": [*JIRA_TOOLS, *PIN_TOOLS],  # F21: conversa sem projeto
     "docs": [*JIRA_TOOLS, *CONFLUENCE_TOOLS],
     "docs_write": [*JIRA_TOOLS, *CONFLUENCE_TOOLS, *PAGE_WRITE_TOOLS],
     "space": [*JIRA_TOOLS, *SPACE_TOOLS],
 }
+# F17-RT-05: cada toolset tem a variante `<nome>_repo`, com as ferramentas do repositório, que só
+# existe no turno com repositório vinculado.
+TOOLSETS: dict[str, list[BaseTool]] = {
+    **_BASE_TOOLSETS,
+    **{f"{name}_repo": [*tools, *REPO_TOOLS] for name, tools in _BASE_TOOLSETS.items()},
+}
+ToolSet = str
+ALL_PROGRESS = {**PROGRESS, **PIN_PROGRESS, **REPO_PROGRESS}
+REPO_UNAVAILABLE_NOTE = (
+    "## Repositório do código do projeto\n"
+    "O projeto tem um repositório vinculado, mas o GitHub não respondeu (ou recusou o token). Siga "
+    "sem o código, não invente caminhos em `where_to_change` e, se o usuário perguntar, diga para "
+    "conferir a conexão em Settings."
+)
 SPACE_NOTE = (
     "## Documentação do projeto\n"
     "O projeto desta conversa não tem espaço do Confluence vinculado. Se o usuário pedir para "
@@ -437,8 +465,11 @@ class ChatService:
         agent: Agent | None = None,
         agents: dict[str, Agent] | None = None,
         confluence: DocsLinks | None = None,
+        github: RepoLinks | None = None,
     ) -> None:
         self._store = store
+        # Repositório GitHub do projeto (F17); `None`: sem leitura do código.
+        self._github = github
         # Documentação do projeto no Confluence (F19); `None` ou flag desligada: sem leitura.
         self._confluence = confluence
         # Grafo já compilado e compartilhado (F11-RT-08): compilar custa ~metade da CPU de um turno.
@@ -552,10 +583,38 @@ class ChatService:
     @staticmethod
     def _toolset(ctx: ToolContext) -> ToolSet:
         if ctx.confluence is not None:
-            return "docs_write" if ctx.docs_writer is not None else "docs"
-        if ctx.space_creator is not None:
-            return "space"
-        return "jira_pin" if ctx.pinner is not None else "jira"
+            base = "docs_write" if ctx.docs_writer is not None else "docs"
+        elif ctx.space_creator is not None:
+            base = "space"
+        else:
+            base = "jira_pin" if ctx.pinner is not None else "jira"
+        return f"{base}_repo" if ctx.repo is not None else base
+
+    async def _repo_note(
+        self, uid: str, project_key: str | None, ctx: ToolContext
+    ) -> tuple[str, GitHubRepoReader | None]:
+        """Fase Descobrir com o código (F17-RF-02): instruções e raiz do repositório vinculado.
+        Sem vínculo ou conexão, nada; GitHub fora ou token recusado, o turno segue sem o código
+        (F17-RF-05)."""
+        if self._github is None or not project_key:
+            return "", None
+        found = await self._github.linked(uid, project_key)
+        if found is None:
+            return "", None
+        client, connection, link = found
+        github = self._github
+
+        async def invalid() -> None:
+            await github.mark_invalid(uid, connection)
+
+        reader = GitHubRepoReader(client, link, uid, invalid)
+        try:
+            note = await repo_note(reader)
+        except RepoToolError:
+            await client.aclose()
+            return REPO_UNAVAILABLE_NOTE, None
+        ctx.repo = reader
+        return note, reader
 
     async def _docs_note(
         self, uid: str, project_key: str | None, sink: FirestoreActionSink, ctx: ToolContext
@@ -634,6 +693,7 @@ class ChatService:
         )
         error: str | None = None
         reader, client, docs_client = None, None, None
+        repo: GitHubRepoReader | None = None
         sink = FirestoreActionSink(self._store, uid, conversation_id, self._clock)
         ctx = ToolContext(uid=uid, conversation_id=conversation_id, jira=None, actions=sink)
         reported = 0
@@ -676,6 +736,11 @@ class ChatService:
                     )
                     if docs_note:
                         context.append(docs_note)
+                    repo_text, repo = await self._repo_note(
+                        uid, str(project_key) if project_key else None, ctx
+                    )
+                    if repo_text:
+                        context.append(repo_text)
                     # Uma única instrução de sistema: o Gemini só aceita uma, no início.
                     messages: list[BaseMessage] = [
                         SystemMessage("\n\n".join([*instructions, *context])),
@@ -730,7 +795,7 @@ class ChatService:
                                             for call in msg.tool_calls:
                                                 yield ToolStartEvent(
                                                     name=call["name"],
-                                                    summary={**PROGRESS, **PIN_PROGRESS}.get(
+                                                    summary=ALL_PROGRESS.get(
                                                         call["name"], "Consultando…"
                                                     ),
                                                 )
@@ -758,7 +823,12 @@ class ChatService:
                         # F21-RF-02: a mesma resposta segue com o contexto do projeto fixado.
                         ctx.pinner = None
                         docs_note, docs_client = await self._docs_note(uid, ctx.pinned, sink, ctx)
-                        context = [project_note(ctx.pinned), *([docs_note] if docs_note else [])]
+                        repo_text, repo = await self._repo_note(uid, ctx.pinned, ctx)
+                        context = [
+                            project_note(ctx.pinned),
+                            *([docs_note] if docs_note else []),
+                            *([repo_text] if repo_text else []),
+                        ]
                         messages[0] = SystemMessage("\n\n".join([*instructions, *context]))
             except (asyncio.CancelledError, GeneratorExit):
                 interrupted = True
@@ -775,6 +845,9 @@ class ChatService:
                     await client.aclose()
                 if docs_client is not None:
                     await docs_client.aclose()
+                if repo is not None:
+                    repo.log_usage()
+                    await repo.aclose()
                 if titling is not None and interrupted:
                     titling.cancel()
                 elif titling is not None:
