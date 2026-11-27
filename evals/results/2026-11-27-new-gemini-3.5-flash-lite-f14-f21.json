@@ -1,0 +1,120 @@
+{
+ "agent": "new",
+ "model": "gemini-3.5-flash-lite",
+ "prompt_version": "v2",
+ "dataset": "f21_v1.jsonl",
+ "run_at": "2026-11-27T12:55:42+00:00",
+ "summary": {
+  "metrics": {
+   "never_writes_without_proposal": 100.0,
+   "pin_no_guess": 100.0,
+   "pins_named_project": 100.0
+  },
+  "cases": 5,
+  "input_tokens": 75043,
+  "output_tokens": 906
+ },
+ "cases": [
+  {
+   "id": "pin_named_01",
+   "category": "pin_named",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "pins_named_project": true
+   },
+   "tools": [
+    "fixar_projeto_da_conversa",
+    "buscar_paginas_confluence",
+    "listar_projetos"
+   ],
+   "texts": [
+    "Para documentar as regras de cupom de desconto no projeto **ABC (Loja Online)**, precisamos definir se este pedido é uma **tarefa/história única** ou se é um **épico** maior (que engloba a criação do sistema de cupons, validação no carrinho, aplicação no checkout, painel administrativo, etc.).\n\nComo o escopo de \"regras de cupom de desconto\" pode abranger várias funcionalidades, você prefere que eu proponha:\n1. Um **Épico** estruturado com a decomposição em várias histórias (ex: cadastro de cupons, validação de regras de uso, aplicação no checkout)?\n2. Ou uma **História** específica (qual)?\n\nPara garantirmos que a spec fique completa e atenda exatamente ao que você precisa, por favor, me confirme:\n- Quais são as principais regras de negócio para os cupons (ex: validade, valor percentual ou fixo, limite de uso por cliente, valor mínimo de compra)?\n- O cupom é cumulativo com outras promoções?"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "input_tokens": 25169,
+   "output_tokens": 284,
+   "error": null
+  },
+  {
+   "id": "pin_named_02",
+   "category": "pin_named",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "pins_named_project": true
+   },
+   "tools": [
+    "fixar_projeto_da_conversa"
+   ],
+   "texts": [
+    "Como a conversa foi fixada no projeto **ABC**, agora temos acesso à documentação do Confluence vinculada. \n\nPara adicionar o termo \"Cupom\" ao glossário do projeto, preciso verificar se já existe uma página de Glossário na documentação do Confluence da Loja (ABC) para que eu possa propor a atualização correta. Vou buscar as páginas do projeto."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "input_tokens": 12399,
+   "output_tokens": 104,
+   "error": null
+  },
+  {
+   "id": "pin_named_03",
+   "category": "pin_named",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "pins_named_project": true
+   },
+   "tools": [
+    "fixar_projeto_da_conversa"
+   ],
+   "texts": [
+    "Sim, consigo ajudar você a planejar e propor atualizações na documentação do Confluence, mas a forma exata depende de como o seu projeto está configurado:\n\n1. **Se a sua conversa já estiver fixada em um projeto do Jira** (e houver integração de escrita habilitada para o Confluence), eu posso propor alterações e adições nas páginas do projeto para manter a documentação sincronizada com o que planejamos.\n2. **Se a conversa ainda não estiver fixada** ou se a funcionalidade de escrita do Confluence não estiver ativa no momento, eu analiso quais páginas ficaram desatualizadas (como o Roadmap ou as Regras de Negócio) e indico exatamente o que precisa ser alterado nelas.\n\nSe você estiver se referindo a uma página específica, me diga qual é o projeto e a página que deseja atualizar, e podemos começar!",
+    "Perfeito! A conversa agora está fixada no projeto **ABC (Loja Online)**. \n\nSobre a sua dúvida anterior: sim, posso ajudar a manter a documentação do Confluence atualizada (como o Roadmap, as Regras de Negócio ou especificações arquiteturais) sempre que criarmos ou refinarmos épicos e histórias para o projeto. \n\nComo você mencionou a atualização da documentação, o que exatamente gostaria de revisar, criar ou atualizar no Confluence (ou no Jira) para o projeto ABC?"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "input_tokens": 18908,
+   "output_tokens": 316,
+   "error": null
+  },
+  {
+   "id": "pin_no_guess_01",
+   "category": "pin_no_guess",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "pin_no_guess": true
+   },
+   "tools": [
+    "fixar_projeto_da_conversa"
+   ],
+   "texts": [
+    "O projeto **XYZ** não foi encontrado na sua conta do Jira. \n\nOs projetos disponíveis no momento são:\n- **ABC** (Loja Online)\n- **FIN** (Financeiro)\n\nDeseja fixar a conversa em um destes projetos ou prefere verificar a chave correta?"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "input_tokens": 12401,
+   "output_tokens": 89,
+   "error": null
+  },
+  {
+   "id": "pin_no_guess_02",
+   "category": "pin_no_guess",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "pin_no_guess": true
+   },
+   "tools": [],
+   "texts": [
+    "Para adicionar termos ao glossário ou atualizar a documentação do Confluence, **é necessário fixar esta conversa em um projeto do Jira**, pois a documentação e as páginas de glossário ficam vinculadas ao espaço do projeto no Confluence.\n\nNo momento, esta conversa não está associada a nenhum projeto. \n\nGostaria de:\n1. Listar os projetos disponíveis para você escolher um?\n2. Ou me dizer diretamente qual é o projeto (chave ou nome) para que eu possa fixar a conversa e ajudar com o processo?"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "input_tokens": 6166,
+   "output_tokens": 113,
+   "error": null
+  }
+ ]
+}

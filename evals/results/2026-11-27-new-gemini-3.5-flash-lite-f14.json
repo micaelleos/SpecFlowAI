@@ -1,0 +1,130 @@
+{
+ "agent": "new",
+ "model": "gemini-3.5-flash-lite",
+ "prompt_version": "v2",
+ "dataset": "f14_v1.jsonl",
+ "run_at": "2026-11-27T12:55:16+00:00",
+ "summary": {
+  "metrics": {
+   "answers_edited_title": 100.0,
+   "never_writes_without_proposal": 100.0,
+   "refine_applied": 100.0,
+   "refine_keeps_user_edit": 100.0,
+   "refine_same_action": 100.0
+  },
+  "cases": 5,
+  "input_tokens": 82276,
+  "output_tokens": 1561
+ },
+ "cases": [
+  {
+   "id": "refine_keep_01",
+   "category": "refine",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "refine_same_action": true,
+    "refine_keeps_user_edit": true,
+    "refine_applied": true
+   },
+   "tools": [
+    "ler_proposta",
+    "revisar_proposta"
+   ],
+   "texts": [
+    "Pronto! Adicionei o cenário de senha expirada (`CA-03`) à proposta **act-7** (mantendo todas as edições anteriores que você havia feito). \n\nA proposta atualizada está aguardando a sua confirmação no cartão."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "input_tokens": 19355,
+   "output_tokens": 505,
+   "error": null
+  },
+  {
+   "id": "refine_keep_02",
+   "category": "refine",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "refine_same_action": true,
+    "refine_keeps_user_edit": true,
+    "refine_applied": true
+   },
+   "tools": [
+    "ler_proposta",
+    "revisar_proposta"
+   ],
+   "texts": [
+    "Atualizei a proposta **act-7** no cartão para incluir a auditoria de acessos na seção \"Fora de escopo\", mantendo as edições anteriores que você havia feito.\n\nO cartão está pronto e aguardando a sua confirmação."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "input_tokens": 19292,
+   "output_tokens": 436,
+   "error": null
+  },
+  {
+   "id": "refine_keep_03",
+   "category": "refine",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "refine_same_action": true,
+    "refine_keeps_user_edit": true,
+    "refine_applied": true
+   },
+   "tools": [
+    "ler_proposta",
+    "revisar_proposta"
+   ],
+   "texts": [
+    "Atualizei a proposta no cartão **act-7** para incluir o critério de aceite para contas bloqueadas na empresa (\"Conta bloqueada\"). O cartão continua aguardando a sua confirmação."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "input_tokens": 18733,
+   "output_tokens": 484,
+   "error": null
+  },
+  {
+   "id": "edited_title_01",
+   "category": "edited_title",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "answers_edited_title": true
+   },
+   "tools": [
+    "ler_proposta"
+   ],
+   "texts": [
+    "O título atual da proposta no cartão é **\"Login com SSO\"**. \n\nComo essa proposta foi editada pelo usuário, este valor reflete o que está salvo no cartão no momento. Como posso ajudar mais com ela?"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "input_tokens": 12438,
+   "output_tokens": 67,
+   "error": null
+  },
+  {
+   "id": "edited_title_02",
+   "category": "edited_title",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "answers_edited_title": true
+   },
+   "tools": [
+    "ler_proposta"
+   ],
+   "texts": [
+    "Na versão atual da proposta (act-7), a mensagem de erro do cenário de provedor fora do ar (CA-02) é:\n\n> `\"SSO indisponível. Tente de novo em alguns minutos.\"`"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "input_tokens": 12458,
+   "output_tokens": 69,
+   "error": null
+  }
+ ]
+}

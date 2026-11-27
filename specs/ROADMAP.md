@@ -23,7 +23,7 @@
 | F11 | Observabilidade, limites de uso e proteção | 3 | Em produção (App Check em `enforce` desde 2026-11-26) | F05–F10 | 6 d | 4 / 11 | [spec](011-observabilidade-e-limites/spec.md) · [plano](011-observabilidade-e-limites/plan.md) · [tarefas](011-observabilidade-e-limites/tasks.md) |
 | F12 | Go-live e desativação do Streamlit | 3 | Em implementação (beta 2026-11-19 → 25) | F01–F11 | 4 d + beta | 4 / 4 | [spec](012-go-live/spec.md) · [plano](012-go-live/plan.md) · [tarefas](012-go-live/tasks.md) |
 | F13 | Login Atlassian via OAuth 2.0 (3LO) | 4 | Rascunho · plano após GA | F04, F12 | 7 d | 4 / 4 | [spec](013-oauth-atlassian/spec.md) · [plano](013-oauth-atlassian/plan.md) |
-| F14 | Editor de artefatos antes da exportação (por seção do contrato) | 4 | Em implementação | F06, F08 | 6 d | 6 / 4 | [spec](014-editor-artefatos/spec.md) · [plano](014-editor-artefatos/plan.md) |
+| F14 | Editor de artefatos antes da exportação (por seção do contrato) | 4 | Em validação | F06, F08 | 6 d | 6 / 4 | [spec](014-editor-artefatos/spec.md) · [plano](014-editor-artefatos/plan.md) |
 | F15 | Suíte contínua de avaliação do agente (evals, incluindo prontidão e implementabilidade) | 4 (baseline na 1) | Rascunho · plano após GA | F05 | 6 d | 4 / — | [spec](015-evals-agente/spec.md) · [plano](015-evals-agente/plan.md) |
 | F16 | Google Analytics (consentimento LGPD, CSP, eventos) | 4 | A especificar (aprovado pelo PO em 2026-11-14) | F02, F08 | — | — | — |
 | F17 | Contexto do repositório (GitHub, só leitura) para "Onde mexer" | 4 | Rascunho · plano após GA | F05, F12 | 5 d | 4 / 3 | [spec](017-contexto-repositorio/spec.md) |

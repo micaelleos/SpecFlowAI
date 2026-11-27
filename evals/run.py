@@ -16,7 +16,7 @@ import json
 import sys
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -28,7 +28,9 @@ from app.agent.graph import build_agent, project_note, system_prompt  # noqa: E4
 from app.agent.llm import build_chat_model  # noqa: E402
 from app.agent.spec.parse import parse_issue  # noqa: E402
 from app.agent.spec.readiness import evaluate  # noqa: E402
-from app.agent.spec.jira_payload import spec_of  # noqa: E402
+from app.agent.spec.jira_payload import create_payload, payload_hash, spec_of  # noqa: E402
+from app.agent.spec.proposal import readiness_dict, revise, spec_preview  # noqa: E402
+from app.agent.spec.schema import WorkItemSpec  # noqa: E402
 from app.agent.spec.render import to_markdown  # noqa: E402
 from app.agent.tools.confluence_tools import index_note  # noqa: E402
 from app.agent.tools.confluence_write_tools import WRITE_NOTE  # noqa: E402
@@ -49,6 +51,7 @@ from app.core.config import Settings  # noqa: E402
 from app.services.chat import (  # noqa: E402
     NO_PROJECT_NOTE,
     TOOLSETS,
+    actions_note,
     message_text,
     with_events,
 )
@@ -182,6 +185,22 @@ class Sink:
     actions: list[dict[str, Any]] = field(default_factory=list)
     pages: list[dict[str, Any]] = field(default_factory=list)  # propostas de página (F20)
     pinned: str | None = None  # projeto fixado pelo agente (F21)
+    pending: dict[str, dict[str, Any]] = field(default_factory=dict)  # propostas abertas (F14)
+    revised: list[str] = field(default_factory=list)  # ações revisadas pelo agente (F14)
+
+    async def read(self, action_id: str) -> dict[str, Any] | None:
+        return self.pending.get(action_id)
+
+    async def revise(self, action_id: str, spec: Any, priority: str | None) -> dict[str, Any] | str:
+        """Como o `ActionEditService` faz (mesma função `revise`), sem Firestore."""
+        doc = self.pending.get(action_id)
+        if doc is None or doc["status"] != "pending":
+            return "a proposta não existe nesta conversa"
+        doc.update(revise(doc, spec, priority))
+        doc["version"] = int(doc.get("version") or 1) + 1
+        doc["editedBy"] = "agent"
+        self.revised.append(action_id)
+        return {"id": action_id, "version": doc["version"], "readiness": doc["readiness"]}
 
     async def propose(
         self,
@@ -214,6 +233,32 @@ class Outcome:
     output_tokens: int = 0
     error: str | None = None
     pages: list[dict[str, Any]] = field(default_factory=list)  # propostas de página (F20)
+    revised: list[str] = field(default_factory=list)  # ações revisadas (F14)
+    pending: dict[str, dict[str, Any]] = field(default_factory=dict)  # estado final delas
+
+
+def pending_doc(case: dict[str, Any]) -> dict[str, Any]:
+    """Proposta aberta na conversa (F14): a spec do caso, como o usuário a deixou."""
+    p = case["pending"]
+    spec = WorkItemSpec.model_validate(p["spec"])
+    readiness = evaluate(spec)
+    payload = create_payload(spec, "ABC", ["specflow"], None)
+    now = datetime.now(UTC)
+    return {
+        "id": p.get("id", "act-1"),
+        "kind": "create_issue",
+        "payload": payload,
+        "payloadHash": payload_hash(payload),
+        "preview": spec_preview(spec, readiness, ["specflow"]) | {"project_key": "ABC"},
+        "readiness": readiness_dict(readiness),
+        "labels": ["specflow"],
+        "status": "pending",
+        "conversationId": case["id"],
+        "createdAt": now,
+        "expiresAt": now + timedelta(hours=24),
+        "editedBy": "user" if p.get("edited") else "agent",
+        "version": 2 if p.get("edited") else 1,
+    }
 
 
 def _normalize_new(actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -272,6 +317,10 @@ async def run_case(
         prompt = legacy_prompt()
     if case.get("project"):  # projeto fixado na conversa (F07-RF-06)
         prompt += "\n\n" + project_note(case["project"])
+    if "pending" in case:  # F14: proposta aberta, como o chat mostra o estado das ações
+        doc = pending_doc(case)
+        sink.pending[doc["id"]] = doc
+        prompt += "\n\n" + actions_note([doc], datetime.now(UTC))
     if docs is not None and agent_kind == "new":  # como o chat faz na fase Descobrir (F19-RF-04)
         prompt += "\n\n" + index_note(docs.space, await docs.index())
         if write:  # F20: como o chat faz com a escrita ligada
@@ -307,6 +356,8 @@ async def run_case(
         outcome.proposals = _normalize_new(sink.actions)
         outcome.pages = sink.pages
         outcome.pinned = ctx.pinned
+        outcome.revised = sink.revised
+        outcome.pending = sink.pending
     else:
         writes = ctx.turn_cache.get("legacy_writes", [])
         outcome.proposals = _normalize_legacy(writes)
@@ -424,6 +475,18 @@ def score(case: dict[str, Any], out: Outcome) -> dict[str, bool]:
         metrics["pins_named_project"] = out.pinned == case["expect_pin"]
     elif cat == "pin_no_guess":  # F21: projeto desconhecido ou não dito → não fixa e pergunta
         metrics["pin_no_guess"] = out.pinned is None and ("?" in last or "projeto" in last)
+    elif cat == "refine":  # F14-RF-04: revisa a mesma proposta e mantém a edição do usuário
+        aid = case.get("pending", {}).get("id", "act-1")
+        spec = spec_of(out.pending.get(aid, {}).get("payload") or {})
+        metrics["refine_same_action"] = aid in out.revised and not creates
+        metrics["refine_keeps_user_edit"] = spec is not None and all(
+            t in to_markdown(spec) or t == spec.title for t in case.get("keep", [])
+        )
+        metrics["refine_applied"] = spec is not None and case["expect_text"].lower() in (
+            to_markdown(spec).lower()
+        )
+    elif cat == "edited_title":  # F14-RF-05: responde com a versão editada pelo usuário
+        metrics["answers_edited_title"] = case["expect_text"].lower() in last and not creates
     elif cat == "docs_no_spam":  # F20: sem motivo, nenhuma página proposta
         metrics["docs_no_spam"] = out.pages == []
     elif cat == "docs_injection":  # F19-RT-05: instrução dentro da página não vira ação

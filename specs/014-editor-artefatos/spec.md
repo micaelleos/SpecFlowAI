@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Status** | Em implementação |
+| **Status** | Em validação |
 | **Fase** | 4 — Evolução |
 | **Responsável** | PO |
 | **Dependências** | F06, F08 |
@@ -110,13 +110,21 @@ Funcionalidade: Editar a proposta antes de confirmar
 ### 10. Rastreabilidade
 | Requisito | Teste(s) | Status |
 |---|---|---|
-| F14-RF-01 | — | ⏳ |
-| F14-RF-02 | — | ⏳ |
-| F14-RF-03 | — | ⏳ |
-| F14-RF-04 | — | ⏳ |
-| F14-RF-05 | — | ⏳ |
-| F14-RF-06 | — | ⏳ |
+| F14-RF-01 | `test_action_edits_api.py::test_previa_recalcula_sem_gravar`; `ActionCard.test.tsx` (F14-RF-01 Edit/prévia/Save); `e2e/f14-editor.spec.ts` AT-F14-01 | ✅ |
+| F14-RF-02 | `test_action_edits_api.py::test_salvar_e_confirmar_cria_o_conteudo_editado`, `test_confirmar_sem_hash_continua_valendo`; AT-F14-01 | ✅ (AT-F14-01 aguarda autorização de escrita no Jira) |
+| F14-RF-03 | `test_action_edits_api.py::test_restaurar_volta_a_versao_do_agente`; `test_action_edits_repo.py` (emulador); `ActionCard.test.tsx` (Cancel, Restore); AT-F14-02 | ✅ |
+| F14-RF-04 | `test_proposal_tools.py::test_revisar_regrava_a_mesma_acao`, `test_revisar_recusa_proposta_de_outra_conversa_ou_tratada`; `ActionCard.test.tsx` (Refine with AI); evals `f14_v1` (refine); AT-F14-03 | ✅ |
+| F14-RF-05 | `test_proposal_tools.py::test_agente_ve_o_titulo_editado_e_le_a_proposta`; evals `f14_v1` (edited_title); AT-F14-03 | ✅ |
+| F14-RF-06 | `test_proposal.py`; `SpecEditor.test.tsx` (história, critérios, épico); AT-F14-01 | ✅ |
+| F14-RT-01 | `test_action_edits_api.py` (409 na edição e na confirmação); `test_action_edits_repo.py`; `ActionCard.test.tsx` (F14-RT-01); AT-F14-04 | ✅ |
+| F14-RT-02 | `test_proposal.py`; `test_action_edits_api.py::test_validacao_igual_a_da_ferramenta` | ✅ |
+| F14-RT-03 | `test_action_edits_api.py::test_previa_recalcula_sem_gravar`; `ActionCard.test.tsx` (prévia com debounce, erro de validação) | ✅ |
+| F14-RT-04 | `test_proposal.py::test_criterios_renumerados_e_tipo_fixo`; `SpecEditor.test.tsx` (esvaziar mantém a seção) | ✅ |
+| F14-RT-05 | `test_action_edits_api.py::test_so_a_dona_edita_e_so_pendente`, `test_expirada_nao_edita`; log `action_edited` | ✅ |
 
 ### 11. Evidências
 | Data | Versão/commit | Ambiente | Execução (link CI) | Resultado | Aceito por |
 |---|---|---|---|---|---|
+| 2026-11-27 | `feat/F14-editor-artefatos` | local | — | `make lint` OK; `make test`: backend 799 (cobertura 93,6%), frontend 183; integração no emulador (`test_action_edits_repo.py`) | — |
+| 2026-11-27 | idem | local + Vertex | — | Evals `f14_v1`: 5/5, todas as métricas em 100% (`2026-11-27-new-gemini-3.5-flash-lite-f14.json`). Regressão: F19, F20 e F21 em 100%; F05 igual ao go-live exceto `epic_complete` (instabilidade que já existia: sem as ferramentas novas, 3 falhas em 12 repetições dos casos de épico; com elas, 3 em 20) | — |
+| 2026-11-27 | idem | local + sandbox (só leitura) | — | AT-F14-02, AT-F14-03 e AT-F14-04 passam com o Gemini real; log da API: 0 `jira_write`, a confirmação da versão antiga recebeu 409 | — |

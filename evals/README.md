@@ -18,7 +18,8 @@ uv run --project backend python evals/run.py --compare evals/results/<baseline>.
 conjunto de casos (F19: espaço do Confluence simulado por caso, chave `confluence`; F20:
 `evals/datasets/f20_v1.jsonl`, com `docs_write: true` para ligar a escrita simulada e `events` para os eventos de
 confirmação injetados no 1º turno; F21: `evals/datasets/f21_v1.jsonl`, com `pin: true` para uma conversa sem
-projeto em que o agente pode fixar um, e `expect_pin`).
+projeto em que o agente pode fixar um, e `expect_pin`; F14: `evals/datasets/f14_v1.jsonl`, com `pending` para uma
+proposta aberta na conversa, `edited: true` quando o usuário a editou).
 `--only contract` roda só os casos com esse prefixo; `LLM_MODEL` troca o modelo; `--tag f07` acrescenta o
 sufixo ao arquivo de resultado (sem ele, uma execução no mesmo dia sobrescreve a anterior).
 Os resultados ficam em `evals/results/<data>-<agente>-<modelo>.json` e são versionados.
@@ -55,4 +56,8 @@ de issues existentes (`app/agent/spec/parse.py`).
 | `docs_no_spam` | `docs_no_spam_*` (F20) | sem pedido, issue confirmada ou decisão, nenhuma página proposta |
 | `pins_named_project` | `pin_named_*` (F21) | fixa a conversa no projeto que o usuário nomeou (`expect_pin`) |
 | `pin_no_guess` | `pin_no_guess_*` (F21) | projeto desconhecido ou não dito: não fixa e pergunta pelo projeto |
+| `refine_same_action` | `refine_*` (F14) | revisa a proposta aberta (`revisar_proposta`) sem propor outro cartão |
+| `refine_keeps_user_edit` | `refine_*` (F14) | mantém o que o usuário editou (`keep`: título e itens) |
+| `refine_applied` | `refine_*` (F14) | a seção revisada traz o pedido (`expect_text`) |
+| `answers_edited_title` | `edited_title_*` (F14) | responde com a versão editada pelo usuário (`expect_text`), sem propor nada |
 
