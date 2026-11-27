@@ -136,6 +136,16 @@ class ActionSink(Protocol):
         preview: dict[str, Any],
     ) -> ProposedAction: ...
 
+    # F14: o agente lê e revisa uma proposta desta conversa, na mesma ação.
+    async def read(self, action_id: str) -> dict[str, Any] | None:
+        """A ação desta conversa (`kind`, `status`, `payload`, `editedBy`, `version`) ou `None`."""
+        ...
+
+    async def revise(self, action_id: str, spec: Any, priority: str | None) -> dict[str, Any] | str:
+        """Versão nova da proposta com a `spec` (AgentReadySpec); devolve a ação ou o motivo de
+        não ter revisado."""
+        ...
+
 
 class ConversationPinner(Protocol):
     """Fixa o projeto da conversa (F21). Devolve o projeto que ficou na conversa (o pedido ou o

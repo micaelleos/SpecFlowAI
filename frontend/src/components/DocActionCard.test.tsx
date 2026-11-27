@@ -26,6 +26,9 @@ function apiAction(kind: ApiAction['kind'], preview: Record<string, unknown>): A
     labels: [],
     created_at: '2026-11-20T12:00:00Z',
     expires_at: '2026-11-21T12:00:00Z',
+    payload_hash: 'h1',
+    version: 1,
+    edited_by: 'agent',
   }
 }
 

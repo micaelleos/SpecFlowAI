@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/actions/{action_id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Prévia e prontidão da proposta editada, sem gravar (F14-RT-03) */
+        post: operations["preview_api_v1_actions__action_id__preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/actions/{action_id}/reject": {
         parameters: {
             query?: never;
@@ -32,6 +49,40 @@ export interface paths {
         put?: never;
         /** Recusa a ação; nada é escrito no Jira */
         post: operations["reject_api_v1_actions__action_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/actions/{action_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Volta a proposta à última versão do agente (F14-RF-03) */
+        post: operations["restore_api_v1_actions__action_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/actions/{action_id}/spec": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Grava a edição como versão nova da proposta (F14-RT-01) */
+        put: operations["save_spec_api_v1_actions__action_id__spec_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -413,6 +464,12 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Edited By
+             * @default agent
+             * @enum {string}
+             */
+            edited_by: "agent" | "user";
             error?: components["schemas"]["ActionError"] | null;
             /**
              * Expires At
@@ -428,6 +485,11 @@ export interface components {
             kind: "create_issue" | "update_issue" | "create_page" | "update_page" | "create_space";
             /** Labels */
             labels: string[];
+            /**
+             * Payload Hash
+             * @default
+             */
+            payload_hash: string;
             /** Preview */
             preview: {
                 [key: string]: unknown;
@@ -438,11 +500,20 @@ export interface components {
             };
             /** Result */
             result?: components["schemas"]["ActionResult"] | components["schemas"]["DocResult"] | null;
+            /** Spec */
+            spec?: {
+                [key: string]: unknown;
+            } | null;
             /**
              * Status
              * @enum {string}
              */
             status: "pending" | "executing" | "done" | "failed" | "rejected" | "expired";
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
         };
         /** ActionResult */
         ActionResult: {
@@ -482,6 +553,14 @@ export interface components {
              * @default
              */
             url: string;
+        };
+        /** ConfirmIn */
+        ConfirmIn: {
+            /**
+             * Payload Hash
+             * @description Hash da versão exibida (`ActionOut.payload_hash`); outro dá 409
+             */
+            payload_hash?: string | null;
         };
         /** ConfluenceLinkOut */
         ConfluenceLinkOut: {
@@ -568,6 +647,18 @@ export interface components {
             messages: number;
         };
         /**
+         * DecompositionItem
+         * @description História prevista no épico (RA-11): chave quando já existe e dependências entre elas.
+         */
+        DecompositionItem: {
+            /** Depends On */
+            depends_on?: string[];
+            /** Key */
+            key?: string | null;
+            /** Title */
+            title: string;
+        };
+        /**
          * DocResult
          * @description Resultado de uma ação do Confluence (F20): a página (ou a inicial do espaço) e um aviso.
          */
@@ -612,6 +703,63 @@ export interface components {
             url: string;
             /** Version */
             version: number;
+        };
+        /** EditIn */
+        EditIn: {
+            /** Base Hash */
+            base_hash: string;
+            /** Priority */
+            priority?: string | null;
+            /** Spec */
+            spec: components["schemas"]["WorkItemSpec"] | components["schemas"]["EpicSpec"];
+        };
+        /** EpicSpec */
+        EpicSpec: {
+            /** Acceptance Criteria */
+            acceptance_criteria?: string[];
+            /** Benefits */
+            benefits?: string[];
+            /** Constraints */
+            constraints?: string[];
+            /** Decomposition */
+            decomposition?: components["schemas"]["DecompositionItem"][];
+            /**
+             * Human Only
+             * @default false
+             */
+            human_only: boolean;
+            /**
+             * Human Only Reason
+             * @default
+             */
+            human_only_reason: string;
+            /**
+             * Objective
+             * @default
+             */
+            objective: string;
+            /** Open Questions */
+            open_questions?: string[];
+            /** Out Of Scope */
+            out_of_scope?: string[];
+            /**
+             * Problem
+             * @default
+             */
+            problem: string;
+            /** References */
+            references?: components["schemas"]["Reference"][];
+            /** Risks */
+            risks?: string[];
+            /** Scope */
+            scope?: string[];
+            /** Title */
+            title: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "epic";
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -797,6 +945,13 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** PreviewIn */
+        PreviewIn: {
+            /** Priority */
+            priority?: string | null;
+            /** Spec */
+            spec: components["schemas"]["WorkItemSpec"] | components["schemas"]["EpicSpec"];
+        };
         /** Profile */
         Profile: {
             /**
@@ -828,6 +983,70 @@ export interface components {
             link: components["schemas"]["ConfluenceLinkOut"] | null;
             suggestion: components["schemas"]["ConfluenceSuggestionOut"] | null;
         };
+        /**
+         * ProposalPreview
+         * @description O cartão como ficaria com a edição, sem gravar (F14-RT-03).
+         */
+        ProposalPreview: {
+            /** Labels */
+            labels: string[];
+            /** Preview */
+            preview: {
+                [key: string]: unknown;
+            };
+            /** Readiness */
+            readiness: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * Reference
+         * @description Página usada como fonte (F19-RF-06): complementa o texto da spec, nunca o substitui.
+         */
+        Reference: {
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+        };
+        /** RestoreIn */
+        RestoreIn: {
+            /** Base Hash */
+            base_hash: string;
+        };
+        /**
+         * Scenario
+         * @description Critério de aceite em Gherkin (RA-04).
+         *
+         *     A primeira linha de cada parte leva Dado/Quando/Então; as seguintes, "E".
+         */
+        Scenario: {
+            /**
+             * Given
+             * @description Pré-condições (Dado); pelo menos 1
+             */
+            given: string[];
+            /** Id */
+            id: string;
+            kind: components["schemas"]["ScenarioKind"];
+            /**
+             * Then
+             * @description Resultado esperado (Então); pelo menos 1
+             */
+            then: string[];
+            /** Title */
+            title: string;
+            /**
+             * When
+             * @description Ação (Quando); pelo menos 1
+             */
+            when: string[];
+        };
+        /**
+         * ScenarioKind
+         * @enum {string}
+         */
+        ScenarioKind: "principal" | "alternativo" | "erro" | "borda";
         /** StatusOut */
         StatusOut: {
             /** Statuses */
@@ -871,6 +1090,52 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /**
+         * WorkItemSpec
+         * @description História ou tarefa: cabe em um PR (RA-10).
+         */
+        WorkItemSpec: {
+            /** Acceptance Criteria */
+            acceptance_criteria?: components["schemas"]["Scenario"][];
+            /** Constraints */
+            constraints?: string[];
+            /** Context */
+            context?: string[];
+            /** Dependencies */
+            dependencies?: string[];
+            /** How To Verify */
+            how_to_verify?: string[];
+            /**
+             * Human Only
+             * @default false
+             */
+            human_only: boolean;
+            /**
+             * Human Only Reason
+             * @default
+             */
+            human_only_reason: string;
+            /**
+             * Objective
+             * @default
+             */
+            objective: string;
+            /** Open Questions */
+            open_questions?: string[];
+            /** Out Of Scope */
+            out_of_scope?: string[];
+            /** References */
+            references?: components["schemas"]["Reference"][];
+            /** Title */
+            title: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "story" | "task";
+            /** Where To Change */
+            where_to_change?: string[];
+        };
     };
     responses: never;
     parameters: never;
@@ -892,7 +1157,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ConfirmIn"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -910,7 +1179,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Já concluída, recusada ou em execução; `action` traz o estado */
+            /** @description Já tratada ou `action-changed`; `action` traz o estado */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -933,6 +1202,63 @@ export interface operations {
             };
             /** @description Escritas no Jira desligadas */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    preview_api_v1_actions__action_id__preview_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-Firebase-AppCheck"?: string | null;
+            };
+            path: {
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalPreview"];
+                };
+            };
+            /** @description Ação inexistente ou de outro usuário */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `action-changed`: a proposta tem outra versão; `action-not-pending`: já tratada. `action` traz o estado atual */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Expirada (24 h) */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Spec inválida ou `action-not-editable` (tipo trocado, ação sem spec) */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -992,6 +1318,120 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    restore_api_v1_actions__action_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-Firebase-AppCheck"?: string | null;
+            };
+            path: {
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionOut"];
+                };
+            };
+            /** @description Ação inexistente ou de outro usuário */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `action-changed`: a proposta tem outra versão; `action-not-pending`: já tratada. `action` traz o estado atual */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Expirada (24 h) */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Spec inválida ou `action-not-editable` (tipo trocado, ação sem spec) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    save_spec_api_v1_actions__action_id__spec_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "X-Firebase-AppCheck"?: string | null;
+            };
+            path: {
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EditIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionOut"];
+                };
+            };
+            /** @description Ação inexistente ou de outro usuário */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `action-changed`: a proposta tem outra versão; `action-not-pending`: já tratada. `action` traz o estado atual */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Expirada (24 h) */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Spec inválida ou `action-not-editable` (tipo trocado, ação sem spec) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

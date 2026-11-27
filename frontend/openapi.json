@@ -31,6 +31,15 @@
             "title": "Created At",
             "type": "string"
           },
+          "edited_by": {
+            "default": "agent",
+            "enum": [
+              "agent",
+              "user"
+            ],
+            "title": "Edited By",
+            "type": "string"
+          },
           "error": {
             "anyOf": [
               {
@@ -68,6 +77,11 @@
             "title": "Labels",
             "type": "array"
           },
+          "payload_hash": {
+            "default": "",
+            "title": "Payload Hash",
+            "type": "string"
+          },
           "preview": {
             "additionalProperties": true,
             "title": "Preview",
@@ -92,6 +106,18 @@
             ],
             "title": "Result"
           },
+          "spec": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spec"
+          },
           "status": {
             "enum": [
               "pending",
@@ -103,6 +129,11 @@
             ],
             "title": "Status",
             "type": "string"
+          },
+          "version": {
+            "default": 1,
+            "title": "Version",
+            "type": "integer"
           }
         },
         "required": [
@@ -191,6 +222,26 @@
           "message"
         ],
         "title": "ClientError",
+        "type": "object"
+      },
+      "ConfirmIn": {
+        "properties": {
+          "payload_hash": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Hash da versão exibida (`ActionOut.payload_hash`); outro dá 409",
+            "title": "Payload Hash"
+          }
+        },
+        "title": "ConfirmIn",
         "type": "object"
       },
       "ConfluenceLinkOut": {
@@ -423,6 +474,44 @@
         "title": "DayUsage",
         "type": "object"
       },
+      "DecompositionItem": {
+        "additionalProperties": false,
+        "description": "História prevista no épico (RA-11): chave quando já existe e dependências entre elas.",
+        "properties": {
+          "depends_on": {
+            "items": {
+              "pattern": "^[A-Z][A-Z0-9_]+-\\d+$",
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Depends On",
+            "type": "array"
+          },
+          "key": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Z][A-Z0-9_]+-\\d+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "DecompositionItem",
+        "type": "object"
+      },
       "DocResult": {
         "description": "Resultado de uma ação do Confluence (F20): a página (ou a inicial do espaço) e um aviso.",
         "properties": {
@@ -534,6 +623,186 @@
           "updated_at"
         ],
         "title": "DocumentOut",
+        "type": "object"
+      },
+      "EditIn": {
+        "properties": {
+          "base_hash": {
+            "maxLength": 64,
+            "minLength": 64,
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Base Hash",
+            "type": "string"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "maxLength": 30,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
+          "spec": {
+            "discriminator": {
+              "mapping": {
+                "epic": "#/components/schemas/EpicSpec",
+                "story": "#/components/schemas/WorkItemSpec",
+                "task": "#/components/schemas/WorkItemSpec"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/WorkItemSpec"
+              },
+              {
+                "$ref": "#/components/schemas/EpicSpec"
+              }
+            ],
+            "title": "Spec"
+          }
+        },
+        "required": [
+          "spec",
+          "base_hash"
+        ],
+        "title": "EditIn",
+        "type": "object"
+      },
+      "EpicSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "acceptance_criteria": {
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Acceptance Criteria",
+            "type": "array"
+          },
+          "benefits": {
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Benefits",
+            "type": "array"
+          },
+          "constraints": {
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Constraints",
+            "type": "array"
+          },
+          "decomposition": {
+            "items": {
+              "$ref": "#/components/schemas/DecompositionItem"
+            },
+            "maxItems": 30,
+            "title": "Decomposition",
+            "type": "array"
+          },
+          "human_only": {
+            "default": false,
+            "title": "Human Only",
+            "type": "boolean"
+          },
+          "human_only_reason": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Human Only Reason",
+            "type": "string"
+          },
+          "objective": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Objective",
+            "type": "string"
+          },
+          "open_questions": {
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Open Questions",
+            "type": "array"
+          },
+          "out_of_scope": {
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Out Of Scope",
+            "type": "array"
+          },
+          "problem": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Problem",
+            "type": "string"
+          },
+          "references": {
+            "items": {
+              "$ref": "#/components/schemas/Reference"
+            },
+            "maxItems": 10,
+            "title": "References",
+            "type": "array"
+          },
+          "risks": {
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Risks",
+            "type": "array"
+          },
+          "scope": {
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Scope",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "type": {
+            "const": "epic",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "type"
+        ],
+        "title": "EpicSpec",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -1000,6 +1269,47 @@
         "title": "MessagePage",
         "type": "object"
       },
+      "PreviewIn": {
+        "properties": {
+          "priority": {
+            "anyOf": [
+              {
+                "maxLength": 30,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
+          "spec": {
+            "discriminator": {
+              "mapping": {
+                "epic": "#/components/schemas/EpicSpec",
+                "story": "#/components/schemas/WorkItemSpec",
+                "task": "#/components/schemas/WorkItemSpec"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/WorkItemSpec"
+              },
+              {
+                "$ref": "#/components/schemas/EpicSpec"
+              }
+            ],
+            "title": "Spec"
+          }
+        },
+        "required": [
+          "spec"
+        ],
+        "title": "PreviewIn",
+        "type": "object"
+      },
       "Profile": {
         "properties": {
           "created_at": {
@@ -1087,6 +1397,148 @@
         ],
         "title": "ProjectConfluenceOut",
         "type": "object"
+      },
+      "ProposalPreview": {
+        "description": "O cartão como ficaria com a edição, sem gravar (F14-RT-03).",
+        "properties": {
+          "labels": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Labels",
+            "type": "array"
+          },
+          "preview": {
+            "additionalProperties": true,
+            "title": "Preview",
+            "type": "object"
+          },
+          "readiness": {
+            "additionalProperties": true,
+            "title": "Readiness",
+            "type": "object"
+          }
+        },
+        "required": [
+          "preview",
+          "readiness",
+          "labels"
+        ],
+        "title": "ProposalPreview",
+        "type": "object"
+      },
+      "Reference": {
+        "additionalProperties": false,
+        "description": "Página usada como fonte (F19-RF-06): complementa o texto da spec, nunca o substitui.",
+        "properties": {
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "maxLength": 1000,
+            "pattern": "^https://[^\\s]+$",
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "url"
+        ],
+        "title": "Reference",
+        "type": "object"
+      },
+      "RestoreIn": {
+        "properties": {
+          "base_hash": {
+            "maxLength": 64,
+            "minLength": 64,
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Base Hash",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base_hash"
+        ],
+        "title": "RestoreIn",
+        "type": "object"
+      },
+      "Scenario": {
+        "additionalProperties": false,
+        "description": "Critério de aceite em Gherkin (RA-04).\n\nA primeira linha de cada parte leva Dado/Quando/Então; as seguintes, \"E\".",
+        "properties": {
+          "given": {
+            "description": "Pré-condições (Dado); pelo menos 1",
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "Given",
+            "type": "array"
+          },
+          "id": {
+            "pattern": "^CA-\\d{2}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ScenarioKind"
+          },
+          "then": {
+            "description": "Resultado esperado (Então); pelo menos 1",
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "Then",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "when": {
+            "description": "Ação (Quando); pelo menos 1",
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "When",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "given",
+          "when",
+          "then"
+        ],
+        "title": "Scenario",
+        "type": "object"
+      },
+      "ScenarioKind": {
+        "enum": [
+          "principal",
+          "alternativo",
+          "erro",
+          "borda"
+        ],
+        "title": "ScenarioKind",
+        "type": "string"
       },
       "StatusOut": {
         "properties": {
@@ -1208,6 +1660,134 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "WorkItemSpec": {
+        "additionalProperties": false,
+        "description": "História ou tarefa: cabe em um PR (RA-10).",
+        "properties": {
+          "acceptance_criteria": {
+            "items": {
+              "$ref": "#/components/schemas/Scenario"
+            },
+            "maxItems": 30,
+            "title": "Acceptance Criteria",
+            "type": "array"
+          },
+          "constraints": {
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Constraints",
+            "type": "array"
+          },
+          "context": {
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Context",
+            "type": "array"
+          },
+          "dependencies": {
+            "items": {
+              "pattern": "^[A-Z][A-Z0-9_]+-\\d+$",
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Dependencies",
+            "type": "array"
+          },
+          "how_to_verify": {
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "How To Verify",
+            "type": "array"
+          },
+          "human_only": {
+            "default": false,
+            "title": "Human Only",
+            "type": "boolean"
+          },
+          "human_only_reason": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Human Only Reason",
+            "type": "string"
+          },
+          "objective": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Objective",
+            "type": "string"
+          },
+          "open_questions": {
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Open Questions",
+            "type": "array"
+          },
+          "out_of_scope": {
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Out Of Scope",
+            "type": "array"
+          },
+          "references": {
+            "items": {
+              "$ref": "#/components/schemas/Reference"
+            },
+            "maxItems": 10,
+            "title": "References",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "story",
+              "task"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "where_to_change": {
+            "items": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Where To Change",
+            "type": "array"
+          }
+        },
+        "required": [
+          "title",
+          "type"
+        ],
+        "title": "WorkItemSpec",
+        "type": "object"
       }
     }
   },
@@ -1263,6 +1843,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ConfirmIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "content": {
@@ -1278,7 +1875,7 @@
             "description": "Ação inexistente ou de outro usuário"
           },
           "409": {
-            "description": "Já concluída, recusada ou em execução; `action` traz o estado"
+            "description": "Já tratada ou `action-changed`; `action` traz o estado"
           },
           "410": {
             "description": "Expirada (24 h)"
@@ -1291,6 +1888,92 @@
           }
         },
         "summary": "Confirma e executa a ação exatamente como exibida",
+        "tags": [
+          "actions"
+        ]
+      }
+    },
+    "/api/v1/actions/{action_id}/preview": {
+      "post": {
+        "operationId": "preview_api_v1_actions__action_id__preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "action_id",
+            "required": true,
+            "schema": {
+              "title": "Action Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Firebase-AppCheck",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Firebase-Appcheck"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Ação inexistente ou de outro usuário"
+          },
+          "409": {
+            "description": "`action-changed`: a proposta tem outra versão; `action-not-pending`: já tratada. `action` traz o estado atual"
+          },
+          "410": {
+            "description": "Expirada (24 h)"
+          },
+          "422": {
+            "description": "Spec inválida ou `action-not-editable` (tipo trocado, ação sem spec)"
+          }
+        },
+        "summary": "Prévia e prontidão da proposta editada, sem gravar (F14-RT-03)",
         "tags": [
           "actions"
         ]
@@ -1374,6 +2057,178 @@
           }
         },
         "summary": "Recusa a ação; nada é escrito no Jira",
+        "tags": [
+          "actions"
+        ]
+      }
+    },
+    "/api/v1/actions/{action_id}/restore": {
+      "post": {
+        "operationId": "restore_api_v1_actions__action_id__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "action_id",
+            "required": true,
+            "schema": {
+              "title": "Action Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Firebase-AppCheck",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Firebase-Appcheck"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Ação inexistente ou de outro usuário"
+          },
+          "409": {
+            "description": "`action-changed`: a proposta tem outra versão; `action-not-pending`: já tratada. `action` traz o estado atual"
+          },
+          "410": {
+            "description": "Expirada (24 h)"
+          },
+          "422": {
+            "description": "Spec inválida ou `action-not-editable` (tipo trocado, ação sem spec)"
+          }
+        },
+        "summary": "Volta a proposta à última versão do agente (F14-RF-03)",
+        "tags": [
+          "actions"
+        ]
+      }
+    },
+    "/api/v1/actions/{action_id}/spec": {
+      "put": {
+        "operationId": "save_spec_api_v1_actions__action_id__spec_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "action_id",
+            "required": true,
+            "schema": {
+              "title": "Action Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Firebase-AppCheck",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Firebase-Appcheck"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Ação inexistente ou de outro usuário"
+          },
+          "409": {
+            "description": "`action-changed`: a proposta tem outra versão; `action-not-pending`: já tratada. `action` traz o estado atual"
+          },
+          "410": {
+            "description": "Expirada (24 h)"
+          },
+          "422": {
+            "description": "Spec inválida ou `action-not-editable` (tipo trocado, ação sem spec)"
+          }
+        },
+        "summary": "Grava a edição como versão nova da proposta (F14-RT-01)",
         "tags": [
           "actions"
         ]

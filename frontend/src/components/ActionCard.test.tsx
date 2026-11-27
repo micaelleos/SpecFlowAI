@@ -5,7 +5,14 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { ActionProblem } from '../product/actions'
 import { ProductContext } from '../product/context'
-import type { ProductApi, ProposedAction } from '../product/types'
+import { RefineContext } from '../chat/refine'
+import type {
+  ActionPreview,
+  EditableSpec,
+  ProductApi,
+  ProposedAction,
+  WorkItemSpec,
+} from '../product/types'
 import { unavailableProductApi } from '../product/unavailable'
 import { ActionCard } from './ActionCard'
 
@@ -40,6 +47,10 @@ const base: ProposedAction = {
   errorCode: null,
   doc: null,
   warning: null,
+  spec: null,
+  version: 1,
+  editedBy: 'agent',
+  payloadHash: 'h1',
 }
 
 function renderCard(action: Partial<ProposedAction> = {}, api: Partial<ProductApi> = {}) {
@@ -212,5 +223,168 @@ describe('F19-RF-07 conflito com a documentação do projeto', () => {
     expect(
       screen.queryByRole('group', { name: 'Conflicts with the project documentation' }),
     ).not.toBeInTheDocument()
+  })
+})
+
+const pixSpec: WorkItemSpec = {
+  type: 'story',
+  title: 'Filtrar Meus pedidos por período',
+  objective: 'Como cliente, quero filtrar por período.',
+  acceptance_criteria: [],
+  human_only: false,
+  human_only_reason: '',
+}
+
+const previewOf = (spec: EditableSpec): ActionPreview => ({
+  title: spec.title,
+  sections: [{ title: 'Objetivo', markdown: spec.objective || '' }],
+  readiness: { ready: Boolean(spec.objective), rules: [] },
+  labels: ['specflow'],
+})
+
+describe('F14-RF-01 F14-RF-02 editar a proposta antes de confirmar', () => {
+  it('Edit abre o editor; a prévia recalcula; Save grava a versão nova', async () => {
+    const previewAction = vi.fn(async (_id: string, spec: EditableSpec) => previewOf(spec))
+    const saveAction = vi.fn(async (_id: string, spec: EditableSpec) => ({
+      ...base,
+      title: spec.title,
+      spec,
+      version: 2,
+      editedBy: 'user' as const,
+      payloadHash: 'h2',
+    }))
+    const confirmAction = vi.fn().mockResolvedValue({ ...base, status: 'done', resultKey: 'S-1' })
+    renderCard({ spec: pixSpec }, { previewAction, saveAction, confirmAction })
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    const form = screen.getByRole('form', { name: /^Editing/ })
+    await user.clear(within(form).getByLabelText('Title'))
+    await user.type(within(form).getByLabelText('Title'), 'Login com SSO')
+    await user.clear(within(form).getByLabelText('Objective'))
+
+    const preview = screen.getByRole('region', { name: 'Preview' })
+    expect(await within(preview).findByText('Login com SSO')).toBeInTheDocument()
+    expect(await within(preview).findByText(/Not ready for a coding agent yet/)).toBeInTheDocument()
+    expect(previewAction).toHaveBeenLastCalledWith(
+      'a1',
+      expect.objectContaining({ title: 'Login com SSO', objective: '' }),
+      null,
+    )
+    expect(saveAction).not.toHaveBeenCalled() // a prévia não grava
+
+    await user.click(await within(form).findByRole('button', { name: 'Save' }))
+    expect(saveAction).toHaveBeenCalledWith(
+      'a1',
+      expect.objectContaining({ title: 'Login com SSO' }),
+      null,
+      'h1',
+    )
+    expect(await screen.findByText('Edited by you · version 2')).toBeInTheDocument()
+    expect(screen.getByText('Login com SSO')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Confirm and create' }))
+    expect(confirmAction).toHaveBeenCalledWith('a1', 'h2') // a versão exibida (F14-RT-01)
+  })
+
+  it('prévia com erro de validação não deixa salvar', async () => {
+    const previewAction = vi.fn().mockRejectedValue(new Error('422'))
+    renderCard({ spec: pixSpec }, { previewAction })
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    expect(await screen.findByText(/Some field is not valid yet/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+  })
+
+  it('proposta sem spec não tem Edit', () => {
+    renderCard({ spec: null })
+    expect(screen.queryByRole('button', { name: 'Edit' })).toBeNull()
+  })
+})
+
+describe('F14-RF-03 desfazer edições', () => {
+  it('Cancel descarta o que não foi salvo', async () => {
+    const saveAction = vi.fn()
+    const previewAction = vi.fn(async (_id: string, spec: EditableSpec) => previewOf(spec))
+    renderCard({ spec: pixSpec }, { saveAction, previewAction })
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await user.type(screen.getByLabelText('Title'), ' extra')
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(saveAction).not.toHaveBeenCalled()
+    expect(screen.getByText('Filtrar Meus pedidos por período')).toBeInTheDocument()
+  })
+
+  it('Restore agent version volta à proposta do agente', async () => {
+    const restoreAction = vi.fn().mockResolvedValue({
+      ...base,
+      title: 'Versão do agente',
+      spec: pixSpec,
+      version: 3,
+    })
+    renderCard(
+      { spec: pixSpec, version: 2, editedBy: 'user', payloadHash: 'h2', title: 'Minha' },
+      { restoreAction },
+    )
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: 'Restore agent version' }))
+
+    expect(restoreAction).toHaveBeenCalledWith('a1', 'h2')
+    expect(await screen.findByText('Versão do agente')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Restore agent version' })).toBeNull()
+  })
+})
+
+describe('F14-RT-01 versão desatualizada', () => {
+  it('confirmar uma versão antiga mostra a atual e pede revisão', async () => {
+    const current = { ...base, title: 'Editada na outra aba', version: 2, payloadHash: 'h2' }
+    const confirmAction = vi
+      .fn()
+      .mockRejectedValue(new ActionProblem('action-changed', 'A proposta mudou', current))
+    renderCard({ spec: pixSpec }, { confirmAction })
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: 'Confirm and create' }))
+
+    expect(await screen.findByText(/This proposal changed after you opened it/)).toBeInTheDocument()
+    expect(screen.getByText('Editada na outra aba')).toBeInTheDocument()
+    expect(confirmAction).toHaveBeenCalledWith('a1', 'h1')
+  })
+})
+
+describe('F14-RF-04 refinar uma seção com IA', () => {
+  it('manda a instrução ao agente pelo chat', async () => {
+    const refine = vi.fn()
+    const client = new QueryClient()
+    render(
+      <QueryClientProvider client={client}>
+        <ProductContext.Provider value={unavailableProductApi}>
+          <RefineContext.Provider value={refine}>
+            <ActionCard action={{ ...base, spec: pixSpec }} conversationId="c1" />
+          </RefineContext.Provider>
+        </ProductContext.Provider>
+      </QueryClientProvider>,
+    )
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: 'Refine “Critérios de aceite” with AI' }))
+    await user.type(
+      screen.getByLabelText('What should change in “Critérios de aceite”?'),
+      'adicione o cenário de senha expirada',
+    )
+    await user.click(screen.getByRole('button', { name: 'Ask the agent' }))
+
+    expect(refine).toHaveBeenCalledWith(
+      'Refine the section "Critérios de aceite" of proposal a1: adicione o cenário de senha expirada',
+    )
+  })
+
+  it('sem chat disponível não há botão', () => {
+    renderCard({ spec: pixSpec })
+    expect(screen.queryByRole('button', { name: /with AI$/ })).toBeNull()
   })
 })

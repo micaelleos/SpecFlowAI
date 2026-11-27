@@ -93,6 +93,17 @@ class MemorySink:
         )
         return ProposedAction(action_id, kind, preview)
 
+    async def read(self, action_id: str) -> dict[str, Any] | None:
+        return next((a for a in self.actions if a["id"] == action_id), None)
+
+    async def revise(self, action_id: str, spec: Any, priority: str | None) -> dict[str, Any] | str:
+        doc = await self.read(action_id)
+        if doc is None:
+            return "a proposta não existe nesta conversa"
+        doc["payload"] = {**doc["payload"], "spec": spec.model_dump(mode="json")}
+        doc["version"] = int(doc.get("version") or 1) + 1
+        return {"id": action_id, "version": doc["version"], "readiness": {"ready": True}}
+
 
 def tool_config(
     jira: FakeJiraReader | None,

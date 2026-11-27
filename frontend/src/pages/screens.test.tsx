@@ -233,7 +233,10 @@ describe('F08-RF-08 conversa vazia e envio', () => {
     expect(screen.getByLabelText('Message')).toHaveValue('Write an epic for Pix checkout')
 
     await user.type(screen.getByLabelText('Message'), '{Enter}')
-    expect(await screen.findByText(/streams its answer here/)).toBeInTheDocument()
+    // O stream de demonstração manda uma palavra por tick: no CI (mais lento) leva mais de 1 s.
+    expect(
+      await screen.findByText(/streams its answer here/, undefined, { timeout: 5000 }),
+    ).toBeInTheDocument()
     expect(screen.getByLabelText('Message')).toHaveValue('')
     expect(
       await screen.findByRole('heading', { level: 1, name: /^Write an epic/ }),
