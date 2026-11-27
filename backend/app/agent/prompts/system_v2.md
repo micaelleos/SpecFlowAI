@@ -56,7 +56,8 @@ acima (spec completa na conversa, já na primeira resposta, sem perguntar projet
 7. **Convergir**: depois que o usuário confirmar, veja quais páginas da documentação ficaram
    desatualizadas (ex.: o Roadmap sem a chave do épico novo). Se existe a seção "Escrita da
    documentação" no fim deste texto, siga-a e proponha as atualizações; sem ela, só diga quais
-   páginas ficaram desatualizadas (você não escreve no Confluence).
+   páginas ficaram desatualizadas (neste turno você não tem as ferramentas de escrita do
+   Confluence; não diga que nunca escreve nele).
 
 ## Antes de propor
 

@@ -6,7 +6,7 @@ todos marcados. Revisão final: PO.
 | # | Item | Status | Evidência |
 |---|---|---|---|
 | 1 | SLO de disponibilidade, dashboard e uptime check ativos (alertas por e-mail removidos pelo PO em 2026-11-20, por custo) | ✅ | F11: `terraform apply` 2026-11-18; AT-F11-03 (e-mail recebido antes da remoção) |
-| 2 | Restauração do Firestore ensaiada (PITR → banco temporário) | ⬜ | `docs/runbooks/firestore-restauracao.md`; registrar horário, documento conferido e a limpeza |
+| 2 | Restauração do Firestore ensaiada (PITR → banco temporário) | ✅ | 2026-11-27 11:12–11:13 UTC, `docs/runbooks/firestore-restauracao.md`: exportação PITR do `specflow` no instante 2026-11-26T12:00Z para `gs://pcb-inspect-specflow-restore`, importação em `specflow-restore` (≈ 20 s). Mesmos `users` nos dois bancos; 3 documentos de antes do instante (conversa, conexão Jira, issue) idênticos por hash. Banco e bucket temporários apagados às 11:13 |
 | 3 | Runbooks revisados | ⬜ | `docs/runbooks/` lidos pelo PO depois do ensaio de restauração |
 | 4 | Evals ≥ baseline | ✅ | 2026-11-27: `evals/results/2026-11-27-new-gemini-3.5-flash-lite-golive.json` (prompt v2, 33 casos, 100% em todas as métricas) × baseline `2026-11-16-legacy-…`: nenhuma métrica abaixo |
 | 5 | ZAP baseline sem achados altos | ✅ | F11-RT-10, run 44282497680 (0 altos) |
