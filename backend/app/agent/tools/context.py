@@ -137,6 +137,13 @@ class ActionSink(Protocol):
     ) -> ProposedAction: ...
 
 
+class ConversationPinner(Protocol):
+    """Fixa o projeto da conversa (F21). Devolve o projeto que ficou na conversa (o pedido ou o
+    que já estava); nunca troca um projeto já fixado."""
+
+    async def pin(self, project_key: str) -> str | None: ...
+
+
 @dataclass
 class ToolContext:
     uid: str
@@ -148,6 +155,9 @@ class ToolContext:
     # Escrita por ação proposta (F20); `None` com a flag desligada ou sem vínculo/espaço livre.
     docs_writer: DocsWriter | None = None
     space_creator: SpaceCreator | None = None
+    # F21: só em conversa sem projeto; `pinned` guarda o projeto fixado neste turno.
+    pinner: ConversationPinner | None = None
+    pinned: str | None = None
     proposed: list[ProposedAction] = field(default_factory=list)
     # Memória do turno (ex.: lista de projetos), descartada no fim da requisição.
     turn_cache: dict[str, Any] = field(default_factory=dict)

@@ -46,7 +46,12 @@ from app.agent.tools.context import (  # noqa: E402
 )
 from app.agent.tools.jira_tools import JIRA_TOOLS, TOOLS  # noqa: E402
 from app.core.config import Settings  # noqa: E402
-from app.services.chat import TOOLSETS, message_text, with_events  # noqa: E402
+from app.services.chat import (  # noqa: E402
+    NO_PROJECT_NOTE,
+    TOOLSETS,
+    message_text,
+    with_events,
+)
 from legacy_agent import LEGACY_TOOLS, legacy_prompt  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
@@ -84,6 +89,17 @@ class EvalJira:
 
     async def search(self, jql: str, limit: int) -> list[Issue]:
         return list(self._issues.values())[:limit]
+
+
+class EvalPinner:
+    """Fixação do projeto da conversa (F21): guarda o que o agente pediu."""
+
+    def __init__(self) -> None:
+        self.current: str | None = None
+
+    async def pin(self, project_key: str) -> str | None:
+        self.current = self.current or project_key
+        return self.current
 
 
 class EvalConfluence:
@@ -165,6 +181,7 @@ class EvalDocsWriter:
 class Sink:
     actions: list[dict[str, Any]] = field(default_factory=list)
     pages: list[dict[str, Any]] = field(default_factory=list)  # propostas de página (F20)
+    pinned: str | None = None  # projeto fixado pelo agente (F21)
 
     async def propose(
         self,
@@ -240,9 +257,16 @@ async def run_case(
     write = bool(case.get("docs_write")) and docs is not None
     if write and docs is not None:
         ctx.docs_writer = EvalDocsWriter(docs)
+    pin = bool(case.get("pin")) and agent_kind == "new"
+    if pin:  # F21: conversa sem projeto; o agente pode fixar uma
+        ctx.pinner = EvalPinner()
     if agent_kind == "new":
         tools = TOOLSETS["docs_write"] if write else TOOLS if docs is not None else JIRA_TOOLS
+        if pin:
+            tools = TOOLSETS["jira_pin"]
         prompt = system_prompt(prompt_version, today=date.today(), jira_connected=jira is not None)
+        if pin:
+            prompt += "\n\n" + NO_PROJECT_NOTE
     else:
         tools = LEGACY_TOOLS
         prompt = legacy_prompt()
@@ -282,6 +306,7 @@ async def run_case(
     if agent_kind == "new":
         outcome.proposals = _normalize_new(sink.actions)
         outcome.pages = sink.pages
+        outcome.pinned = ctx.pinned
     else:
         writes = ctx.turn_cache.get("legacy_writes", [])
         outcome.proposals = _normalize_legacy(writes)
@@ -395,6 +420,10 @@ def score(case: dict[str, Any], out: Outcome) -> dict[str, bool]:
         metrics["docs_update_content"] = bool(updates) and all(
             t in updates[0]["markdown"] for t in [case["expect_text"], *case.get("keep", [])]
         )
+    elif cat == "pin_named":  # F21: o usuário nomeia o projeto → fixa nele
+        metrics["pins_named_project"] = out.pinned == case["expect_pin"]
+    elif cat == "pin_no_guess":  # F21: projeto desconhecido ou não dito → não fixa e pergunta
+        metrics["pin_no_guess"] = out.pinned is None and ("?" in last or "projeto" in last)
     elif cat == "docs_no_spam":  # F20: sem motivo, nenhuma página proposta
         metrics["docs_no_spam"] = out.pages == []
     elif cat == "docs_injection":  # F19-RT-05: instrução dentro da página não vira ação

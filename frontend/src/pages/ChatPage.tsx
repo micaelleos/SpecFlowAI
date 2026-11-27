@@ -20,7 +20,7 @@ export function ChatPage() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { conversationId = null } = useParams()
-  const [search] = useSearchParams()
+  const [search, setSearch] = useSearchParams()
   // "Create space" em Projects (F20-RF-01) chega com o pedido escrito; enviar continua com o usuário.
   const [draft, setDraft] = useState(() => (conversationId ? '' : (search.get('pedido') ?? '')))
   const bottom = useRef<HTMLDivElement>(null)
@@ -49,13 +49,22 @@ export function ChatPage() {
   const current = conversations.data?.find((c) => c.id === conversationId)
   const projectKey = conversationId ? (current?.projectKey ?? null) : search.get('projeto')
 
-  const unpin = useMutation({
-    mutationFn: (id: string) => product.pinProject(id, null),
+  const pin = useMutation({
+    mutationFn: ({ id, key }: { id: string; key: string | null }) => product.pinProject(id, key),
     onSuccess: (updated) =>
       queryClient.setQueryData<ConversationSummary[]>(['conversations'], (list) =>
         list?.map((c) => (c.id === updated.id ? updated : c)),
       ),
   })
+  const choose = (key: string) => {
+    if (!key) return
+    if (conversationId) pin.mutate({ id: conversationId, key })
+    else
+      setSearch((params) => {
+        params.set('projeto', key)
+        return params
+      })
+  }
 
   // As páginas vêm da mais recente para a mais antiga; na tela, a mais antiga fica em cima.
   const messages = [...(history.data?.pages ?? [])].reverse().flatMap((p) => p.items)
@@ -101,7 +110,7 @@ export function ChatPage() {
               {conversationId && (
                 <button
                   type="button"
-                  onClick={() => unpin.mutate(conversationId)}
+                  onClick={() => pin.mutate({ id: conversationId, key: null })}
                   className="rounded-full px-1 text-indigo-900 hover:bg-indigo-100"
                   aria-label={t.chat.unpin}
                   title={t.chat.unpin}
@@ -111,6 +120,7 @@ export function ChatPage() {
               )}
             </span>
           )}
+          {!projectKey && <PinProjectSelect disabled={pin.isPending} onChoose={choose} />}
         </header>
 
         {/* F08: as mensagens rolam dentro deste contêiner (lg+); o campo fica sempre embaixo. `relative`
@@ -203,6 +213,44 @@ export function ChatPage() {
         </form>
       </main>
     </div>
+  )
+}
+
+/** F21-RF-05: fixar um projeto à mão numa conversa sem projeto. Componente à parte para as consultas
+ * da conexão e dos projetos não renderizarem a página do chat inteira. */
+function PinProjectSelect({
+  disabled,
+  onChoose,
+}: {
+  disabled: boolean
+  onChoose: (key: string) => void
+}) {
+  const product = useProduct()
+  const connection = useQuery({ queryKey: ['jira-connection'], queryFn: product.getJiraConnection })
+  const projects = useQuery({
+    queryKey: ['jira-projects'],
+    queryFn: () => product.listProjects(),
+    enabled: product.features.projects && connection.data?.status === 'ok',
+    retry: false,
+  })
+  if (!projects.data?.length) return null
+  return (
+    <label className="flex items-center gap-2 text-sm text-zinc-700">
+      {t.chat.pinLabel}
+      <select
+        value=""
+        disabled={disabled}
+        onChange={(e) => onChoose(e.target.value)}
+        className="min-h-9 rounded-md border border-zinc-300 bg-white px-2 text-sm"
+      >
+        <option value="">{t.chat.pinChoose}</option>
+        {projects.data.map((p) => (
+          <option key={p.key} value={p.key}>
+            {p.key} · {p.name}
+          </option>
+        ))}
+      </select>
+    </label>
   )
 }
 

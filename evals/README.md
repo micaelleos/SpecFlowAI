@@ -17,7 +17,8 @@ uv run --project backend python evals/run.py --compare evals/results/<baseline>.
 `--prompt v2` escolhe o prompt do agente novo (padrão `v1`); `--dataset evals/datasets/f19_v1.jsonl` troca o
 conjunto de casos (F19: espaço do Confluence simulado por caso, chave `confluence`; F20:
 `evals/datasets/f20_v1.jsonl`, com `docs_write: true` para ligar a escrita simulada e `events` para os eventos de
-confirmação injetados no 1º turno).
+confirmação injetados no 1º turno; F21: `evals/datasets/f21_v1.jsonl`, com `pin: true` para uma conversa sem
+projeto em que o agente pode fixar um, e `expect_pin`).
 `--only contract` roda só os casos com esse prefixo; `LLM_MODEL` troca o modelo; `--tag f07` acrescenta o
 sufixo ao arquivo de resultado (sem ele, uma execução no mesmo dia sobrescreve a anterior).
 Os resultados ficam em `evals/results/<data>-<agente>-<modelo>.json` e são versionados.
@@ -52,4 +53,6 @@ de issues existentes (`app/agent/spec/parse.py`).
 | `docs_adr_proposed`, `docs_adr_number`, `docs_adr_not_edited` | `docs_adr_*` (F20) | uma decisão vira uma ADR nova (Proposta), com o próximo número, sem editar a ADR aceita |
 | `docs_update_proposed`, `docs_update_content` | `docs_update_*` (F20) | atualiza a página certa, inteira: o conteúdo novo, com o próximo ID, e o que já havia |
 | `docs_no_spam` | `docs_no_spam_*` (F20) | sem pedido, issue confirmada ou decisão, nenhuma página proposta |
+| `pins_named_project` | `pin_named_*` (F21) | fixa a conversa no projeto que o usuário nomeou (`expect_pin`) |
+| `pin_no_guess` | `pin_no_guess_*` (F21) | projeto desconhecido ou não dito: não fixa e pergunta pelo projeto |
 

@@ -8,7 +8,7 @@ usuário, das ferramentas e do assistente e o uso de tokens. Nada fica em memór
 import asyncio
 import logging
 import time
-from collections.abc import AsyncGenerator, AsyncIterator, Callable
+from collections.abc import AsyncGenerator, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal, Protocol, cast
@@ -40,6 +40,8 @@ from app.agent.tools.context import (
     SpaceCreator,
     ToolContext,
 )
+from app.agent.tools.conversation_tools import PIN_TOOL, PIN_TOOLS
+from app.agent.tools.conversation_tools import PROGRESS as PIN_PROGRESS
 from app.agent.tools.jira_tools import JIRA_TOOLS, PROGRESS
 from app.core.errors import ApiProblemError
 from app.core.logging import uid_hash
@@ -82,11 +84,13 @@ NO_DOCS_NOTE = (
 # dizer que "não escreve no Confluence" (teste do PO em prd, 2026-11-27).
 NO_PROJECT_NOTE = (
     "## Documentação do projeto\n"
-    "Esta conversa não está fixada em um projeto, então neste turno você não tem acesso ao "
-    "Confluence (nem leitura nem escrita). Se o usuário perguntar sobre a documentação do projeto "
-    "ou pedir para criar ou alterar páginas, explique que isso funciona numa conversa fixada num "
-    "projeto com espaço vinculado: em Jira projects, abra Project docs do projeto, vincule o "
-    "espaço e use Chat about this project. Não diga que você não consegue escrever no Confluence."
+    "Esta conversa ainda não está fixada em um projeto, então por enquanto você não tem acesso ao "
+    "Confluence. Quando o usuário disser de qual projeto do Jira está falando (ou confirmar a sua "
+    "sugestão), fixe a conversa com `fixar_projeto_da_conversa` e siga com o pedido: a "
+    "documentação do projeto fica disponível na mesma resposta. Se o pedido envolve um projeto e "
+    "você não sabe qual, pergunte (pode mostrar os projetos com `listar_projetos`); não fixe por "
+    "palpite. O usuário também pode fixar pelo seletor Pin a project no topo do chat. Não diga que "
+    "você não consegue escrever no Confluence."
 )
 ERRORS = {
     "turn-timeout": "A resposta demorou demais. Tente de novo.",
@@ -107,6 +111,7 @@ class ChatStore(Protocol):
     def create_action(self, uid: str, data: dict[str, Any]) -> str: ...
     def list_actions(self, uid: str, conversation_id: str) -> list[dict[str, Any]]: ...
     def set_title_if_auto(self, uid: str, conversation_id: str, title: str) -> bool: ...
+    def pin_project(self, uid: str, conversation_id: str, project_key: str) -> str | None: ...
     def add_usage(self, uid: str, day: str, input_tokens: int, output_tokens: int) -> None: ...
 
 
@@ -143,9 +148,10 @@ class ChatSettings(Protocol):
 
 # Ferramentas por turno: sem espaço vinculado, o modelo nem vê as do Confluence (F19-RF-04); as de
 # escrita só existem com a flag da F20 (rollback: desligar a flag).
-ToolSet = Literal["jira", "docs", "docs_write", "space"]
+ToolSet = Literal["jira", "jira_pin", "docs", "docs_write", "space"]
 TOOLSETS: dict[str, list[BaseTool]] = {
     "jira": JIRA_TOOLS,
+    "jira_pin": [*JIRA_TOOLS, *PIN_TOOLS],  # F21: conversa sem projeto
     "docs": [*JIRA_TOOLS, *CONFLUENCE_TOOLS],
     "docs_write": [*JIRA_TOOLS, *CONFLUENCE_TOOLS, *PAGE_WRITE_TOOLS],
     "space": [*JIRA_TOOLS, *SPACE_TOOLS],
@@ -338,6 +344,30 @@ class FirestoreActionSink:
         return ProposedAction(action_id, kind, preview)
 
 
+class _Pinner:
+    """Fixa o projeto da conversa pelo `ChatStore`, numa transação (F21-RT-01, F21-RT-02)."""
+
+    def __init__(self, store: ChatStore, uid: str, conversation_id: str) -> None:
+        self._store, self._uid, self._conversation_id = store, uid, conversation_id
+
+    async def pin(self, project_key: str) -> str | None:
+        current = await in_thread(
+            self._store.pin_project, self._uid, self._conversation_id, project_key
+        )
+        if current == project_key:
+            log.info(
+                "conversation_pinned",
+                extra={
+                    "fields": {
+                        "event": "conversation_pinned",
+                        "uid_hash": uid_hash(self._uid),
+                        "project_key": project_key,
+                    }
+                },
+            )
+        return current
+
+
 class _Turn:
     def __init__(self) -> None:
         self.text: list[str] = []
@@ -500,7 +530,9 @@ class ChatService:
     def _toolset(ctx: ToolContext) -> ToolSet:
         if ctx.confluence is not None:
             return "docs_write" if ctx.docs_writer is not None else "docs"
-        return "space" if ctx.space_creator is not None else "jira"
+        if ctx.space_creator is not None:
+            return "space"
+        return "jira_pin" if ctx.pinner is not None else "jira"
 
     async def _docs_note(
         self, uid: str, project_key: str | None, sink: FirestoreActionSink, ctx: ToolContext
@@ -611,66 +643,100 @@ class ChatService:
                     if note := actions_note(actions, self._clock()):
                         instructions.append(note)
                     project_key = conversation.get("projectKey")
+                    if not project_key and reader is not None:
+                        ctx.pinner = _Pinner(self._store, uid, conversation_id)  # F21
+                    context: list[str] = []
                     if project_key:
-                        instructions.append(project_note(str(project_key)))
+                        context.append(project_note(str(project_key)))
                     docs_note, docs_client = await self._docs_note(
                         uid, str(project_key) if project_key else None, sink, ctx
                     )
                     if docs_note:
-                        instructions.append(docs_note)
+                        context.append(docs_note)
                     # Uma única instrução de sistema: o Gemini só aceita uma, no início.
                     messages: list[BaseMessage] = [
-                        SystemMessage("\n\n".join(instructions)),
+                        SystemMessage("\n\n".join([*instructions, *context])),
                         *window.messages,
                         HumanMessage(with_events(text, window.pending_events)),
                     ]
-                    agent = self._agent_for(self._toolset(ctx))
-                    state: AgentState = {
-                        "messages": cast(list[AnyMessage], messages),
-                        "iterations": 0,
-                        "limit_reached": False,
-                    }
                     config: RunnableConfig = {"configurable": {"ctx": ctx}, "recursion_limit": 100}
-                    parts: AsyncIterator[Any] = cast(
-                        AsyncIterator[Any],
-                        agent.astream(state, config, stream_mode=["messages", "updates"]),
-                    )
-                    async for mode, chunk in parts:
-                        if mode == "messages":
-                            message, meta = chunk
-                            # Chunks do streaming; sem streaming, vem a mensagem inteira.
-                            if meta.get("langgraph_node") == "model" and isinstance(
-                                message, AIMessageChunk | AIMessage
-                            ):
-                                piece = message_text(message.content)
-                                if piece:
-                                    if turn.first_token_at is None:
-                                        turn.first_token_at = time.monotonic()
-                                    turn.text.append(piece)
-                                    yield TokenEvent(text=piece)
-                            continue
-                        for node, update in (chunk or {}).items():
-                            if not update:
-                                continue
-                            if update.get("limit_reached"):
-                                error = "tool-limit"
-                            for msg in update.get("messages", []):
-                                if node == "model" and isinstance(msg, AIMessage):
-                                    turn.add_usage(msg)
-                                    for call in msg.tool_calls:
-                                        summary_text = PROGRESS.get(call["name"], "Consultando…")
-                                        yield ToolStartEvent(
-                                            name=call["name"], summary=summary_text
+                    # Mensagens do turno (chamadas e respostas de ferramentas): a continuação
+                    # depois de fixar o projeto parte delas (F21-RF-02, F21-RT-03).
+                    produced: list[BaseMessage] = []
+                    counters: dict[str, int] = {"iterations": 0, "reviews": 0}
+                    while True:
+                        agent = self._agent_for(self._toolset(ctx))
+                        state: AgentState = {
+                            "messages": cast(list[AnyMessage], [*messages, *produced]),
+                            "iterations": counters["iterations"],
+                            "reviews": counters["reviews"],
+                            "limit_reached": False,
+                        }
+                        pinned_now = False
+                        parts = cast(
+                            AsyncGenerator[Any],
+                            agent.astream(state, config, stream_mode=["messages", "updates"]),
+                        )
+                        try:
+                            async for mode, chunk in parts:
+                                if mode == "messages":
+                                    message, meta = chunk
+                                    # Chunks do streaming; sem streaming, vem a mensagem inteira.
+                                    if meta.get("langgraph_node") == "model" and isinstance(
+                                        message, AIMessageChunk | AIMessage
+                                    ):
+                                        piece = message_text(message.content)
+                                        if piece:
+                                            if turn.first_token_at is None:
+                                                turn.first_token_at = time.monotonic()
+                                            turn.text.append(piece)
+                                            yield TokenEvent(text=piece)
+                                    continue
+                                for node, update in (chunk or {}).items():
+                                    if not update:
+                                        continue
+                                    if update.get("limit_reached"):
+                                        error = "tool-limit"
+                                    for counter in ("iterations", "reviews"):
+                                        if counter in update:
+                                            counters[counter] = int(update[counter])
+                                    for msg in update.get("messages", []):
+                                        produced.append(msg)
+                                        if node == "model" and isinstance(msg, AIMessage):
+                                            turn.add_usage(msg)
+                                            for call in msg.tool_calls:
+                                                yield ToolStartEvent(
+                                                    name=call["name"],
+                                                    summary={**PROGRESS, **PIN_PROGRESS}.get(
+                                                        call["name"], "Consultando…"
+                                                    ),
+                                                )
+                                        elif isinstance(msg, ToolMessage):
+                                            turn.tool_messages.append(msg)
+                                            done = (
+                                                "Falhou" if msg.status == "error" else "Concluído"
+                                            )
+                                            yield ToolEndEvent(name=str(msg.name), summary=done)
+                                            if msg.name == PIN_TOOL and ctx.pinned is not None:
+                                                pinned_now = True
+                                    for action in ctx.proposed[reported:]:
+                                        yield ActionProposedEvent(
+                                            action_id=action.id,
+                                            kind=action.kind,
+                                            preview=action.preview,
                                         )
-                                elif isinstance(msg, ToolMessage):
-                                    turn.tool_messages.append(msg)
-                                    done = "Falhou" if msg.status == "error" else "Concluído"
-                                    yield ToolEndEvent(name=str(msg.name), summary=done)
-                            for action in ctx.proposed[reported:]:
-                                yield ActionProposedEvent(
-                                    action_id=action.id, kind=action.kind, preview=action.preview
-                                )
-                            reported = len(ctx.proposed)
+                                    reported = len(ctx.proposed)
+                                if pinned_now:
+                                    break
+                        finally:
+                            await parts.aclose()
+                        if not pinned_now or ctx.pinner is None or ctx.pinned is None:
+                            break
+                        # F21-RF-02: a mesma resposta segue com o contexto do projeto fixado.
+                        ctx.pinner = None
+                        docs_note, docs_client = await self._docs_note(uid, ctx.pinned, sink, ctx)
+                        context = [project_note(ctx.pinned), *([docs_note] if docs_note else [])]
+                        messages[0] = SystemMessage("\n\n".join([*instructions, *context]))
             except (asyncio.CancelledError, GeneratorExit):
                 interrupted = True
                 raise

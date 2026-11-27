@@ -68,6 +68,25 @@ class ConversationRepository:
 
         return bool(run(self._db.transaction()))
 
+    def pin_project(self, uid: str, conversation_id: str, project_key: str) -> str | None:
+        """Fixa o projeto só se a conversa ainda não tem um (F21-RT-01). Devolve o projeto que
+        ficou na conversa: o novo, o que já estava, ou `None` se a conversa não existe."""
+        ref = self._conversations(uid).document(conversation_id)
+
+        @firestore.transactional
+        def run(transaction: firestore.Transaction) -> str | None:
+            snapshot = ref.get(transaction=transaction)
+            if not snapshot.exists:
+                return None
+            current = (snapshot.to_dict() or {}).get("projectKey")
+            if current:
+                return str(current)
+            transaction.update(ref, {"projectKey": project_key})
+            return project_key
+
+        result = run(self._db.transaction())
+        return str(result) if result is not None else None
+
     def delete_conversation(self, uid: str, conversation_id: str) -> None:
         """Mensagens, ações da conversa e a conversa, em lotes; repetir não falha (F07-RT-03)."""
         messages = self._messages(uid, conversation_id)

@@ -1,0 +1,5 @@
+{"id": "pin_named_01", "category": "pin_named", "pin": true, "expect_pin": "ABC", "turns": ["Vamos trabalhar no projeto ABC. Quero documentar as regras de cupom de desconto."]}
+{"id": "pin_named_02", "category": "pin_named", "pin": true, "expect_pin": "ABC", "turns": ["Sobre a Loja (ABC): adicione ao glossário o termo Cupom, código que dá desconto no pedido."]}
+{"id": "pin_named_03", "category": "pin_named", "pin": true, "expect_pin": "ABC", "turns": ["Você consegue atualizar a documentação no Confluence?", "Sim, é do projeto ABC."]}
+{"id": "pin_no_guess_01", "category": "pin_no_guess", "pin": true, "turns": ["Fixe esta conversa no projeto XYZ e atualize o roadmap."]}
+{"id": "pin_no_guess_02", "category": "pin_no_guess", "pin": true, "turns": ["Adicione ao glossário o termo Cupom: código que dá desconto no pedido."]}
