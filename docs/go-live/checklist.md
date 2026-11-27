@@ -8,13 +8,13 @@ todos marcados. Revisão final: PO.
 | 1 | SLO de disponibilidade, dashboard e uptime check ativos (alertas por e-mail removidos pelo PO em 2026-11-20, por custo) | ✅ | F11: `terraform apply` 2026-11-18; AT-F11-03 (e-mail recebido antes da remoção) |
 | 2 | Restauração do Firestore ensaiada (PITR → banco temporário) | ⬜ | `docs/runbooks/firestore-restauracao.md`; registrar horário, documento conferido e a limpeza |
 | 3 | Runbooks revisados | ⬜ | `docs/runbooks/` lidos pelo PO depois do ensaio de restauração |
-| 4 | Evals ≥ baseline | ⬜ | `uv run --project backend python evals/run.py --compare evals/results/<baseline>.json evals/results/<novo>.json` |
+| 4 | Evals ≥ baseline | ✅ | 2026-11-27: `evals/results/2026-11-27-new-gemini-3.5-flash-lite-golive.json` (prompt v2, 33 casos, 100% em todas as métricas) × baseline `2026-11-16-legacy-…`: nenhuma métrica abaixo |
 | 5 | ZAP baseline sem achados altos | ✅ | F11-RT-10, run 44282497680 (0 altos) |
 | 6 | Custo estimado por mês aprovado pelo PO | ⬜ | tabela abaixo |
-| 7 | Privacidade publicada | ⬜ | https://specsflow-ai.web.app/privacy (F12-RF-04) |
-| 8 | App Check em `enforce` | ⬜ | F11-T008 (a partir de 2026-11-25); AT-F11-04 |
+| 7 | Privacidade publicada | ✅ | https://specsflow-ai.web.app/privacy (F12-RF-04) |
+| 8 | App Check em `enforce` | ✅ | F11-T008: `terraform apply` 2026-11-26 (revisão `specflow-api-00024-djw`, PR #42); `monitor` desde 2026-11-18 sem falha depois da 1ª hora. AT-F11-04 em prd pendente de conta de teste |
 | 9 | HTTPS | ✅ | Firebase Hosting e Cloud Run só servem HTTPS; sem domínio próprio (decisão do PO) |
-| 10 | Contato de suporte | ⬜ | rodapé de https://specsflow-ai.web.app → "Help (GitHub issues)" (F12-RF-03) |
+| 10 | Contato de suporte | ✅ | rodapé de https://specsflow-ai.web.app → "Help (GitHub issues)" (F12-RF-03) |
 | 11 | AT-F12-01 verde em prd | ⬜ | `e2e/f12-golive.spec.ts` com `E2E_PRD=1` |
 | 12 | Beta concluído, sem Sev1 aberto | ⬜ | `docs/go-live/beta.md` → resumo do feedback |
 
