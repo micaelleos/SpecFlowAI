@@ -1,0 +1,386 @@
+{
+ "agent": "new",
+ "model": "gemini-3.5-flash-lite",
+ "prompt_version": "v2",
+ "dataset": "f20_v1.jsonl",
+ "run_at": "2026-11-27T16:48:15+00:00",
+ "summary": {
+  "metrics": {
+   "docs_adr_not_edited": 100.0,
+   "docs_adr_number": 100.0,
+   "docs_adr_proposed": 100.0,
+   "docs_converge_feature": 100.0,
+   "docs_converge_keeps_ids": 100.0,
+   "docs_converge_roadmap": 100.0,
+   "docs_no_spam": 100.0,
+   "docs_update_content": 100.0,
+   "docs_update_proposed": 100.0,
+   "never_writes_without_proposal": 100.0
+  },
+  "cases": 8,
+  "input_tokens": 263450,
+  "output_tokens": 5569
+ },
+ "cases": [
+  {
+   "id": "docs_converge_01",
+   "category": "docs_converge",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "docs_converge_roadmap": true,
+    "docs_converge_feature": true,
+    "docs_converge_keeps_ids": true
+   },
+   "tools": [
+    "ler_pagina_confluence",
+    "ler_pagina_confluence",
+    "ler_modelo_de_pagina",
+    "propor_atualizacao_pagina",
+    "propor_criacao_pagina"
+   ],
+   "texts": [
+    "As propostas para alinhar a documentação do projeto com o épico criado (`ABC-42`) estão prontas e aguardando a sua confirmação nos cartões:\n\n1. **Atualização do Roadmap** (`act-1`): atualiza o status da **FEAT-02 — Cupons de desconto** para \"Em andamento\" e adiciona o vínculo com o épico **ABC-42** e sua página de feature.\n2. **Criação da página da Feature** (`act-2`): cria a página `FEAT-02 — Cupons de desconto` detalhando o problema, objetivos, escopo, regras, critérios de aceite e a decomposição com as histórias **ABC-43** (\"Aplicar cupom no carrinho\") e **ABC-44** (\"Recusar cupom expirado\")."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [
+    {
+     "kind": "update_page",
+     "page_type": "roadmap",
+     "page_id": "105",
+     "title": "Roadmap",
+     "markdown": "# Roadmap — Loja Online\n\n**Atualizado em:** 2026-11-27\n\n| ID | Feature | Status | Depende de | Épico Jira | Página |\n|---|---|---|---|---|---|\n| FEAT-01 | Checkout Pix | Entregue | — | ABC-10 | FEAT-01 — Checkout Pix |\n| FEAT-02 | Cupons de desconto | Em andamento | FEAT-01 | ABC-42 | FEAT-02 — Cupons de desconto |\n\n## Próximas prioridades\n1. Cupons de desconto.",
+     "summary": "Atualiza status da FEAT-02 para \"Em andamento\" e vincula ao épico ABC-42 no Roadmap."
+    },
+    {
+     "kind": "create_page",
+     "page_type": "feature",
+     "title": "FEAT-02 — Cupons de desconto",
+     "markdown": "# FEAT-02 — Cupons de desconto\n\n**Status:** Em andamento · **Épico Jira:** ABC-42 · **Depende de:** FEAT-01\n\n## Problema\nOs clientes da Loja Online não conseguem aplicar códigos promocionais ou cupons de desconto no carrinho de compras, o que reduz a conversão em campanhas de marketing.\n\n## Objetivo e indicador\n- **Objetivo:** Permitir que o cliente insira cupons de desconto válidos no carrinho e impedir o uso de cupons expirados ou inválidos.\n- **Indicador:** Aumento na taxa de conversão do checkout e redução de carrinhos abandonados por falta de desconto.\n\n## Escopo\n- **Inclui:** Validação e aplicação de cupons percentuais ou de valor fixo no carrinho, além de tratamento de erro para cupons expirados ou inexistentes.\n- **Fora de escopo:** Cupons de uso único vinculados a CPFs específicos (será feito em fase posterior).\n\n## Regras e decisões que se aplicam\n- ADR-001 — Pagamentos pelo gateway PagX\n\n## Critérios de aceite do épico\n- O sistema aplica corretamente o desconto válido no valor total do carrinho.\n- O sistema rejeita e exibe mensagem clara para cupons expirados ou inválidos.\n\n## Decomposição\n| Story | Chave Jira | Depende de | Status |\n|---|---|---|---|\n| Aplicar cupom no carrinho | ABC-43 | — | A Fazer |\n| Recusar cupom expirado | ABC-44 | ABC-43 | A Fazer |\n\n## Perguntas em aberto\n- Nenhuma no momento.\n\n## Histórico\n| Data | Mudança | Por |\n|---|---|---|\n| 2026-11-27 | Criada e vinculada ao épico ABC-42 | SpecFlow (confirmado por PO) |\n",
+     "summary": "Cria a página FEAT-02 — Cupons de desconto com a decomposição do épico ABC-42."
+    }
+   ],
+   "projects": [],
+   "input_tokens": 36569,
+   "output_tokens": 941,
+   "error": null
+  },
+  {
+   "id": "docs_converge_02",
+   "category": "docs_converge",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "docs_converge_roadmap": true,
+    "docs_converge_feature": true,
+    "docs_converge_keeps_ids": true
+   },
+   "tools": [
+    "ler_pagina_confluence",
+    "ler_pagina_confluence",
+    "ler_pagina_confluence",
+    "ler_pagina_confluence",
+    "ler_pagina_confluence",
+    "ler_pagina_confluence",
+    "propor_atualizacao_pagina",
+    "propor_criacao_pagina"
+   ],
+   "texts": [
+    "O épico **ABC-50** (\"Frete expresso\") foi confirmado com sucesso no Jira, contendo as histórias **ABC-51** e **ABC-52**.\n\nPara manter a documentação atualizada e convergida conforme a nossa metodologia, propus duas ações no Confluence que estão aguardando a sua confirmação nos cartões acima:\n\n1. **Atualizar o Roadmap (Página 105):** Adiciona a feature **FEAT-02 — Frete expresso** com o status *Em andamento*, dependência do *FEAT-01* e vinculada ao épico *ABC-50*.\n2. **Criar a página da Feature (FEAT-02 — Frete expresso):** Registra formalmente o novo épico com seus objetivos, escopo, fora de escopo e decomposição em histórias."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [
+    {
+     "kind": "update_page",
+     "page_type": "roadmap",
+     "page_id": "105",
+     "title": "Roadmap",
+     "markdown": "# Roadmap — Loja Online\n\n**Atualizado em:** 2026-11-27\n\n| ID | Feature | Status | Depende de | Épico Jira | Página |\n|---|---|---|---|---|---|\n| FEAT-01 | Checkout Pix | Entregue | — | ABC-10 | FEAT-01 — Checkout Pix |\n| FEAT-02 | Frete expresso | Em andamento | FEAT-01 | ABC-50 | FEAT-02 — Frete expresso |\n\n## Próximas prioridades\n1. Frete expresso.\n2. Cupons de desconto.",
+     "summary": "Adiciona FEAT-02 Frete expresso ao Roadmap com o épico ABC-50"
+    },
+    {
+     "kind": "create_page",
+     "page_type": "feature",
+     "title": "FEAT-02 — Frete expresso",
+     "markdown": "# FEAT-02 — Frete expresso\n\n**Status:** Em andamento · **Épico Jira:** ABC-50\n\n## Problema\nClientes que precisam receber produtos com urgência não possuem opção de entrega rápida no checkout.\n\n## Benefícios\n- Aumento da conversão de clientes com urgência de entrega.\n- Novo fluxo de receita com taxas de frete diferenciadas.\n\n## Escopo\n- Cálculo de prazo expresso com base no CEP de entrega.\n- Exibição da opção de frete expresso no checkout.\n\n## Fora de escopo\n- Entrega no mesmo dia (same-day delivery).\n- Integração com novas transportadoras além das já homologadas.\n\n## Decomposição\n- **ABC-51** — Calcular prazo expresso\n- **ABC-52** — Mostrar opção expresso no checkout\n",
+     "summary": "Cria a página FEAT-02 — Frete expresso para registrar o novo épico de frete expresso"
+    }
+   ],
+   "projects": [],
+   "input_tokens": 28419,
+   "output_tokens": 784,
+   "error": null
+  },
+  {
+   "id": "docs_adr_01",
+   "category": "docs_adr",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "docs_adr_proposed": true,
+    "docs_adr_number": true,
+    "docs_adr_not_edited": true
+   },
+   "tools": [
+    "ler_pagina_confluence",
+    "ler_pagina_confluence",
+    "ler_modelo_de_pagina",
+    "propor_criacao_pagina"
+   ],
+   "texts": [
+    "Proponho registrar a decisão do uso do Google Cloud Pub/Sub na documentação criando a **ADR-002**. \n\nA ação está aguardando a sua confirmação no cartão acima."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [
+    {
+     "kind": "create_page",
+     "page_type": "adr",
+     "title": "ADR-002 — Uso de Google Cloud Pub/Sub para fila de pedidos",
+     "markdown": "# ADR-002 — Uso de Google Cloud Pub/Sub para fila de pedidos\n\n**Status:** Proposta · **Data:** 2026-11-27 · **Decidido por:** Time\n\n## Contexto\nPrecisamos escolher uma tecnologia de mensageria/fila para o processamento de pedidos, garantindo alta disponibilidade e baixo esforço operacional.\n\n## Decisão\nA fila de pedidos vai utilizar o Google Cloud Pub/Sub em vez de RabbitMQ ou Cloud Tasks, pois já estamos operando no GCP e não queremos o overhead operacional de gerenciar um broker dedicado.\n\n## Alternativas consideradas\n| Alternativa | Por que não |\n|---|---|\n| RabbitMQ | Exige provisionamento, gerenciamento e manutenção de um broker dedicado, aumentando o esforço operacional. |\n| Cloud Tasks | Focado em enfileiramento de tarefas HTTP com agendamento, sendo menos adequado para o padrão de mensageria pub/sub de eventos de pedidos que precisamos. |\n\n## Consequências\n- **Positivas:** Integração nativa com o ecossistema GCP, ausência de gerenciamento de infraestrutura de broker, alta escalabilidade gerenciada.\n- **Negativas / riscos:** Acoplamento com os serviços de mensageria do GCP (vendor lock-in).\n- **Afeta:** Arquitetura do sistema, componentes de mensageria e processamento de pedidos.\n",
+     "summary": "Criação da ADR-002 definindo o uso do Google Cloud Pub/Sub para a fila de pedidos."
+    }
+   ],
+   "projects": [],
+   "input_tokens": 44140,
+   "output_tokens": 490,
+   "error": null
+  },
+  {
+   "id": "docs_adr_02",
+   "category": "docs_adr",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "docs_adr_proposed": true,
+    "docs_adr_number": true,
+    "docs_adr_not_edited": true
+   },
+   "tools": [
+    "ler_pagina_confluence",
+    "ler_modelo_de_pagina",
+    "propor_criacao_pagina"
+   ],
+   "texts": [
+    "Documentei a decisão criando a proposta para a **ADR-002 — Migração do gateway PagX para PagY**, que já está aguardando a sua confirmação no cartão."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [
+    {
+     "kind": "create_page",
+     "page_type": "adr",
+     "title": "ADR-002 — Migração do gateway PagX para PagY",
+     "markdown": "# ADR-002 — Migração do gateway PagX para PagY\n\n**Status:** Proposta · **Data:** 2026-11-27 · **Decidido por:** PO / Time\n\n## Contexto\nO gateway PagX vinha sendo utilizado conforme estabelecido na ADR-001. No entanto, houve um aumento nos custos operacionais que motivou a avaliação de um novo provedor.\n\n## Decisão\nSubstituir o gateway PagX pelo PagY a partir de 2027 para novos pagamentos. O gateway PagX será mantido exclusivamente para processar estornos antigos.\n\n## Alternativas consideradas\n| Alternativa | Por que não |\n|---|---|\n| Renegociar a taxa do PagX | A proposta de renegociação apresentada pelo fornecedor não atingiu a redução de custos esperada para viabilizar a operação. |\n\n## Consequências\n- **Positivas:** Redução significativa nos custos de transação de pagamento a partir de 2027.\n- **Negativas / riscos:** Necessidade de desenvolvimento de nova integração e manutenção temporária de duas integrações (PagY para pagamentos e PagX para estornos antigos).\n- **Afeta:** `ADR-001`, fluxos de checkout e processamento de pagamentos.\n",
+     "summary": "Adiciona a ADR-002 para documentar a substituição do gateway PagX pelo PagY a partir de 2027 por motivo de custo, mantendo o PagX apenas para estornos."
+    }
+   ],
+   "projects": [],
+   "input_tokens": 35110,
+   "output_tokens": 465,
+   "error": null
+  },
+  {
+   "id": "docs_update_01",
+   "category": "docs_update",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "docs_update_proposed": true,
+    "docs_update_content": true
+   },
+   "tools": [
+    "ler_pagina_confluence",
+    "propor_atualizacao_pagina"
+   ],
+   "texts": [
+    "Propus a atualização da página de **Glossário** para incluir o termo **Cupom** conforme solicitado. O cartão com a proposta está aguardando a sua confirmação."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [
+    {
+     "kind": "update_page",
+     "page_type": "glossario",
+     "page_id": "103",
+     "title": "Glossário",
+     "markdown": "# Glossário — Loja Online\n\n| Termo | Definição | Não confundir com | Exemplo |\n|---|---|---|---|\n| Pedido | Compra confirmada pelo cliente | Carrinho | o pedido 123 foi pago |\n| Faturamento | Emissão da nota fiscal do pedido | Pagamento | o faturamento sai em D+1 |\n| Cupom | Código que dá desconto no pedido | Promoção | CUPOM10 dá 10% de desconto |",
+     "summary": "Adiciona o termo Cupom ao glossário"
+    }
+   ],
+   "projects": [],
+   "input_tokens": 25721,
+   "output_tokens": 218,
+   "error": null
+  },
+  {
+   "id": "docs_update_02",
+   "category": "docs_update",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "docs_update_proposed": true,
+    "docs_update_content": true
+   },
+   "tools": [
+    "ler_pagina_confluence",
+    "propor_atualizacao_pagina"
+   ],
+   "texts": [
+    "Propus a atualização da página de **Regras de negócio** para incluir a nova regra **RN-06** (\"Pedido cancelado depois do faturamento gera estorno em até 7 dias\"). \n\nA proposta está aguardando a sua confirmação no cartão acima."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [
+    {
+     "kind": "update_page",
+     "page_type": "regras",
+     "page_id": "101",
+     "title": "Regras de negócio",
+     "markdown": "# Regras de negócio — Loja Online\n\n| ID | Regra | Exemplo | Status | Origem |\n|---|---|---|---|---|\n| RN-01 | Frete grátis para pedidos a partir de R$ 199,00 | pedido de R$ 250 | Vigente | Comercial |\n| RN-03 | Pedido acima de R$ 1.000,00 exige aprovação do gerente antes do faturamento | pedido de R$ 1.500 | Vigente | Financeiro |\n| RN-05 | Cupom não acumula com outra promoção | cupom + frete grátis | Vigente | Marketing |\n| RN-06 | Pedido cancelado depois do faturamento gera estorno em até 7 dias | cancelamento após nota fiscal emitida | Vigente | Financeiro |",
+     "summary": "Adiciona RN-06 sobre prazo de estorno para pedido cancelado após o faturamento."
+    }
+   ],
+   "projects": [],
+   "input_tokens": 25976,
+   "output_tokens": 325,
+   "error": null
+  },
+  {
+   "id": "docs_no_spam_01",
+   "category": "docs_no_spam",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "docs_no_spam": true
+   },
+   "tools": [
+    "ler_pagina_confluence",
+    "ler_pagina_confluence",
+    "ler_pagina_confluence",
+    "propor_criacao_issue",
+    "propor_criacao_issue",
+    "propor_criacao_issue"
+   ],
+   "texts": [
+    "A proposta para criação da história de visualização do histórico de pedidos dos últimos 12 meses foi gerada e está aguardando a sua confirmação no cartão."
+   ],
+   "proposals": [
+    {
+     "kind": "create_issue",
+     "labels": [
+      "human-only",
+      "specflow"
+     ],
+     "project": "ABC",
+     "spec": {
+      "title": "Exibir histórico de pedidos dos últimos 12 meses do cliente",
+      "objective": "Como cliente autenticado, quero visualizar o histórico dos meus pedidos dos últimos 12 meses ordenados do mais novo ao mais antigo, para acompanhar minhas compras passadas.",
+      "out_of_scope": [
+       "Exportar o histórico de pedidos (CSV, PDF ou outros formatos).",
+       "Visualização de pedidos com mais de 12 meses de histórico."
+      ],
+      "open_questions": [],
+      "human_only": true,
+      "human_only_reason": "A funcionalidade consome dados sensíveis e pessoais de histórico de compras de clientes, exigindo verificação de conformidade de acesso e LGPD antes da implementação por agente.",
+      "references": [
+       {
+        "title": "Glossário",
+        "url": "https://exemplo.atlassian.net/wiki/spaces/ABC/pages/103"
+       }
+      ],
+      "type": "story",
+      "context": [
+       "O cliente precisa acompanhar suas compras passadas para fins de suporte e controle pessoal.",
+       "Glossário: Pedido é a compra confirmada pelo cliente (ID: 103)."
+      ],
+      "acceptance_criteria": [
+       {
+        "id": "CA-01",
+        "kind": "principal",
+        "title": "Exibir histórico de pedidos dos últimos 12 meses ordenado por data decrescente",
+        "given": [
+         "o cliente está autenticado na loja online",
+         "existem pedidos realizados nos últimos 12 meses"
+        ],
+        "when": [
+         "o cliente acessa a página de histórico de pedidos"
+        ],
+        "then": [
+         "o sistema exibe a lista de pedidos dos últimos 12 meses ordenada do mais novo ao mais antigo",
+         "cada item exibe número do pedido, data, valor total e status atual"
+        ]
+       },
+       {
+        "id": "CA-02",
+        "kind": "alternativo",
+        "title": "Exibir mensagem quando não houver pedidos no período",
+        "given": [
+         "o cliente está autenticado na loja online",
+         "não existem pedidos realizados nos últimos 12 meses"
+        ],
+        "when": [
+         "o cliente acessa a página de histórico de pedidos"
+        ],
+        "then": [
+         "o sistema exibe a mensagem \"Você não possui pedidos nos últimos 12 meses.\""
+        ]
+       },
+       {
+        "id": "CA-03",
+        "kind": "borda",
+        "title": "Filtrar e ocultar pedidos anteriores ao limite de 12 meses",
+        "given": [
+         "o cliente está autenticado na loja online",
+         "existem pedidos com mais de 12 meses de data"
+        ],
+        "when": [
+         "o cliente acessa a página de histórico de pedidos"
+        ],
+        "then": [
+         "o sistema oculta os pedidos com mais de 12 meses e exibe apenas os do período permitido"
+        ]
+       }
+      ],
+      "constraints": [
+       "A API de histórico de pedidos deve retornar os registros filtrados estritamente para o intervalo de 12 meses anteriores à data atual.",
+       "O faturamento e os dados dos pedidos devem seguir o glossário da aplicação onde Pedido é a compra confirmada."
+      ],
+      "where_to_change": [
+       "frontend/src/pages/OrderHistory.tsx",
+       "backend/src/services/OrderService.ts"
+      ],
+      "how_to_verify": [
+       "Realizar testes de unidade para validar a ordenação cronológica decrescente e o filtro de 12 meses.",
+       "Realizar testes E2E para garantir que a interface renderiza a listagem corretamente e a mensagem de ausência de pedidos quando aplicável."
+      ],
+      "dependencies": []
+     },
+     "conflicts": []
+    }
+   ],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "input_tokens": 50515,
+   "output_tokens": 2233,
+   "error": null
+  },
+  {
+   "id": "docs_no_spam_02",
+   "category": "docs_no_spam",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "docs_no_spam": true
+   },
+   "tools": [
+    "ler_pagina_confluence"
+   ],
+   "texts": [
+    "De acordo com a página de [Regras de negócio](https://exemplo.atlassian.net/wiki/spaces/ABC/pages/101), a regra vigente de aprovação é:\n\n* **RN-03**: Pedido acima de R$ 1.000,00 exige aprovação do gerente antes do faturamento (Exemplo: pedido de R$ 1.500)."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "input_tokens": 17000,
+   "output_tokens": 113,
+   "error": null
+  }
+ ]
+}

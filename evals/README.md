@@ -19,7 +19,10 @@ conjunto de casos (F19: espaço do Confluence simulado por caso, chave `confluen
 `evals/datasets/f20_v1.jsonl`, com `docs_write: true` para ligar a escrita simulada e `events` para os eventos de
 confirmação injetados no 1º turno; F21: `evals/datasets/f21_v1.jsonl`, com `pin: true` para uma conversa sem
 projeto em que o agente pode fixar um, e `expect_pin`; F14: `evals/datasets/f14_v1.jsonl`, com `pending` para uma
-proposta aberta na conversa, `edited: true` quando o usuário a editou).
+proposta aberta na conversa, `edited: true` quando o usuário a editou; F17: `evals/datasets/f17_v1.jsonl`, com
+`repo` (`{caminho: conteúdo}`) para um repositório GitHub simulado, `expect_path`, `expect_command` e `marker`).
+`--rescore` usa o dataset gravado no resultado. F22: `evals/datasets/f22_v1.jsonl` (`expect_template`, `expect_name`,
+`taken`/`suggested`; as chaves de `ABC` e `FIN` estão em uso no Jira simulado).
 `--only contract` roda só os casos com esse prefixo; `LLM_MODEL` troca o modelo; `--tag f07` acrescenta o
 sufixo ao arquivo de resultado (sem ele, uma execução no mesmo dia sobrescreve a anterior).
 Os resultados ficam em `evals/results/<data>-<agente>-<modelo>.json` e são versionados.

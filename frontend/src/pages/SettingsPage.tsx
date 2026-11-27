@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { type FormEvent, useState } from 'react'
 
+import { GitHubPanel } from '../components/GitHubPanel'
 import { Alert, Button, Field, PageHeader, Panel } from '../components/ui'
 import { errorMessage, t } from '../i18n/en'
 import { useProduct } from '../product/context'
@@ -216,6 +217,9 @@ export function SettingsPage() {
           </a>
           <p>{t.settings.howNote}</p>
         </aside>
+      </div>
+      <div className="max-w-3xl">
+        <GitHubPanel />
       </div>
     </main>
   )

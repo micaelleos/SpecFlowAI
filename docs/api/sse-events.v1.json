@@ -19,7 +19,8 @@
             "update_issue",
             "create_page",
             "update_page",
-            "create_space"
+            "create_space",
+            "create_project"
           ],
           "title": "Kind",
           "type": "string"

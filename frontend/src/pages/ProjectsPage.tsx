@@ -206,6 +206,7 @@ function ProjectCard({ project: p, color }: { project: JiraProject; color: strin
         </a>
       </div>
       <ProjectDocsPanel projectKey={p.key} projectName={p.name} />
+      <ProjectRepoPanel projectKey={p.key} projectName={p.name} />
     </li>
   )
 }
@@ -385,5 +386,137 @@ function SpaceLink({ space }: { space: DocSpace }) {
     >
       {space.name} ({space.key})
     </a>
+  )
+}
+
+/**
+ * Repositório GitHub do projeto (F17-RF-01, F17-RF-04): carrega só quando aberto e só salva depois
+ * do clique em "Link"; a API confere que o token vê o repositório.
+ */
+function ProjectRepoPanel({
+  projectKey,
+  projectName,
+}: {
+  projectKey: string
+  projectName: string
+}) {
+  const product = useProduct()
+  const queryClient = useQueryClient()
+  const [open, setOpen] = useState(false)
+  const [choosing, setChoosing] = useState(false)
+  const [query, setQuery] = useState('')
+  const key = ['project-repo', projectKey]
+  const repo = useQuery({
+    queryKey: key,
+    queryFn: () => product.getProjectRepo(projectKey),
+    enabled: open && !!product.features.github,
+    retry: false,
+  })
+  const showSearch = open && (choosing || (repo.data?.connected === true && !repo.data.link))
+  const repos = useQuery({
+    queryKey: ['github-repos', query.trim()],
+    queryFn: () => product.listGitHubRepos(query.trim()),
+    enabled: showSearch,
+    retry: false,
+  })
+  const link = useMutation({
+    mutationFn: (fullName: string) => product.linkProjectRepo(projectKey, fullName),
+    onSuccess: (data) => {
+      queryClient.setQueryData(key, data)
+      setChoosing(false)
+    },
+  })
+  const unlink = useMutation({
+    mutationFn: () => product.unlinkProjectRepo(projectKey),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: key }),
+  })
+  if (!product.features.github) return null
+  const r = t.projects.repo
+  const busy = link.isPending || unlink.isPending
+  const error = link.error ?? unlink.error ?? repo.error ?? repos.error
+
+  return (
+    <div className="border-t border-zinc-100 pt-3 text-sm">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+        className="font-medium text-indigo-700 hover:underline"
+      >
+        {r.toggle}
+      </button>
+      {open && (
+        <section aria-label={r.title(projectName)} className="mt-2 flex flex-col gap-2">
+          {repo.isPending && <p className="text-zinc-600">{r.loading}</p>}
+          {error && <Alert kind="error">{errorMessage(error)}</Alert>}
+          {repo.data && !repo.data.connected && (
+            <p className="text-zinc-700">
+              {r.notConnected}{' '}
+              <Link to="/settings" className="font-medium text-indigo-700 underline">
+                {r.goToSettings}
+              </Link>
+            </p>
+          )}
+          {repo.data?.link && (
+            <>
+              <p className="text-zinc-700">{r.linked}</p>
+              <a
+                href={repo.data.link.repo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-indigo-700 hover:underline"
+              >
+                {repo.data.link.repo.fullName}
+              </a>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className={BUTTON}
+                  disabled={busy}
+                  onClick={() => unlink.mutate()}
+                >
+                  {r.unlink}
+                </button>
+                {!choosing && (
+                  <button type="button" className={BUTTON} onClick={() => setChoosing(true)}>
+                    {r.change}
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+          {repo.data?.connected && !repo.data.link && <p className="text-zinc-700">{r.none}</p>}
+          {showSearch && (
+            <div className="flex flex-col gap-2">
+              <label className="flex flex-col gap-1 text-xs text-zinc-600">
+                {r.search}
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="min-h-11 rounded-lg border border-zinc-300 px-3 text-sm text-zinc-900"
+                />
+              </label>
+              {repos.data?.length === 0 && <p className="text-zinc-600">{r.noRepos}</p>}
+              <ul className="flex flex-col gap-1">
+                {repos.data?.map((item) => (
+                  <li key={item.fullName} className="flex items-center justify-between gap-2">
+                    <span className="truncate">{item.fullName}</span>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      aria-label={r.linkRepo(item.fullName)}
+                      onClick={() => link.mutate(item.fullName)}
+                      className={BUTTON}
+                    >
+                      {r.link}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
+    </div>
   )
 }

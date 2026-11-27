@@ -139,6 +139,15 @@ export const t = {
       title: 'Proposed action',
       titleCreate: (type: string, project: string) => `Create ${type} in ${project}`,
       titleUpdate: (key: string) => `Update ${key}`,
+      titleProject: (key: string) => `Create Jira project ${key}`,
+      projectName: 'Name',
+      projectKey: 'Key',
+      template: 'Template',
+      lead: 'Project lead',
+      leadYou: (name: string) => (name ? `${name} (your account)` : 'Your account'),
+      description: 'Description',
+      confirmProject: 'Confirm and create project',
+      createdProject: (key: string) => `Created project ${key}`,
       expires: (date: string) => `Expires ${date}`,
       project: 'Project',
       type: 'Type',
@@ -310,6 +319,21 @@ export const t = {
       noSpaces: 'No space matches.',
       linkSpace: (name: string) => `Link ${name}`,
     },
+    repo: {
+      toggle: 'Code repository',
+      title: (project: string) => `Code repository for ${project}`,
+      loading: 'Loading…',
+      notConnected: 'Connect GitHub in Settings to link a repository.',
+      goToSettings: 'Open Settings',
+      linked: 'The agent reads this repository to say where to change the code:',
+      none: 'No repository linked. Pick one the token can see.',
+      search: 'Search repositories',
+      noRepos: 'No repository matches.',
+      link: 'Link',
+      linkRepo: (name: string) => `Link ${name}`,
+      unlink: 'Unlink',
+      change: 'Choose another repository',
+    },
     soonTitle: 'The project list arrives in the next release',
     soonBody: (site: string) =>
       `Your Jira (${site}) is already connected. In the next release, the projects your account can see show up here.`,
@@ -358,6 +382,25 @@ export const t = {
     empty: 'No issues yet. When you confirm an action in the chat, it shows up here.',
     noMatch: 'No issues match these filters.',
     goChat: 'Go to chat',
+  },
+  github: {
+    panel: 'GitHub connection',
+    intro:
+      'Optional. With a read-only token, the agent reads the repository linked to each project to fill “Where to change” with real paths. SpecFlow never writes to GitHub and keeps no copy of the code.',
+    tokenLabel: 'Fine-grained token',
+    tokenHint:
+      'Repository access: only the repositories you want · Permissions: Contents → Read-only. Nothing else.',
+    save: 'Connect GitHub',
+    connectedAs: (login: string) => `GitHub connected · ${login}`,
+    invalid: 'GitHub rejected the saved token',
+    token: 'Token',
+    validatedAt: (when: string) => `Validated ${when}`,
+    test: 'Test GitHub token',
+    testOk: 'GitHub accepted the token.',
+    remove: 'Remove GitHub',
+    removeConfirm:
+      'Remove the GitHub connection? Every project loses its linked repository. Nothing changes on GitHub.',
+    howLink: 'Create a fine-grained token on GitHub',
   },
   settings: {
     title: 'Settings',
@@ -488,6 +531,15 @@ export const t = {
       'This page changed since the proposal. Ask the agent to review it again.',
     'docs-writes-disabled':
       'Writing to Confluence is turned off right now. The proposal is still saved.',
+    'github-invalid-token':
+      'GitHub rejected the token. Check that it has not expired and has Contents: read.',
+    'github-unreachable': "We couldn't reach GitHub. Try again in a moment.",
+    'github-connection-exists':
+      'You already connected GitHub. Remove the current connection to use another token.',
+    'github-connection-not-found': 'This connection no longer exists. Reload the page.',
+    'github-not-connected': 'Connect GitHub in Settings first.',
+    'github-repo-not-found':
+      "The token can't see that repository. Check the name and the token's repositories on GitHub.",
     'jira-credential-rejected': 'Jira rejected your saved token. Replace it in Settings.',
     'spec-unavailable':
       'SpecFlow AI only updated fields of this issue, so there is no spec to copy.',

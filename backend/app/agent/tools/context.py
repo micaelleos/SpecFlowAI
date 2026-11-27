@@ -43,8 +43,20 @@ class IssueNotFoundError(JiraToolError):
     pass
 
 
+@dataclass(frozen=True)
+class ProjectKeyCheck:
+    """Chave de projeto conferida no Jira (F22-RF-02): `problem` `None` se ela serve."""
+
+    problem: str | None
+    suggestion: str = ""
+
+
 class JiraReader(Protocol):
+    # Nome da conta Atlassian conectada: o responsável pelos projetos criados (F22).
+    account_name: str
+
     async def list_projects(self) -> list[Project]: ...
+    async def check_project_key(self, key: str) -> ProjectKeyCheck: ...
     async def get_issue(self, key: str) -> Issue: ...
     async def search(self, jql: str, limit: int) -> list[Issue]: ...
 
@@ -114,7 +126,9 @@ class SpaceCreator(Protocol):
     async def draft_space(self, project_name: str) -> PageDraft: ...
 
 
-ActionKind = Literal["create_issue", "update_issue", "create_page", "update_page", "create_space"]
+ActionKind = Literal[
+    "create_issue", "update_issue", "create_page", "update_page", "create_space", "create_project"
+]
 
 
 @dataclass(frozen=True)
@@ -147,6 +161,41 @@ class ActionSink(Protocol):
         ...
 
 
+@dataclass(frozen=True)
+class RepoInfo:
+    full_name: str
+    url: str
+    default_branch: str
+
+
+@dataclass(frozen=True)
+class RepoEntry:
+    path: str
+    type: str  # "blob" (arquivo) ou "tree" (pasta)
+    size: int = 0
+
+
+class RepoToolError(Exception):
+    """Falha ao ler o repositório; a mensagem vai ao modelo (nunca contém o token)."""
+
+
+class RepoReader(Protocol):
+    """Repositório GitHub vinculado ao projeto da conversa, só leitura (F17, ADR-010)."""
+
+    @property
+    def info(self) -> RepoInfo: ...
+
+    async def entries(self) -> tuple[list[RepoEntry], bool]:
+        """A árvore do branch padrão e se ela veio truncada."""
+        ...
+
+    async def read(self, path: str) -> str: ...
+
+    async def search_code(self, text: str, limit: int) -> list[str]:
+        """Caminhos pela busca de código do GitHub; lista vazia se ela não responder."""
+        ...
+
+
 class ConversationPinner(Protocol):
     """Fixa o projeto da conversa (F21). Devolve o projeto que ficou na conversa (o pedido ou o
     que já estava); nunca troca um projeto já fixado."""
@@ -165,6 +214,8 @@ class ToolContext:
     # Escrita por ação proposta (F20); `None` com a flag desligada ou sem vínculo/espaço livre.
     docs_writer: DocsWriter | None = None
     space_creator: SpaceCreator | None = None
+    # Repositório vinculado ao projeto (F17); `None` sem vínculo, sem conexão ou token recusado.
+    repo: RepoReader | None = None
     # F21: só em conversa sem projeto; `pinned` guarda o projeto fixado neste turno.
     pinner: ConversationPinner | None = None
     pinned: str | None = None

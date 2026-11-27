@@ -22,6 +22,7 @@ from app.core.errors import AppCheckRequiredError, EmailNotVerifiedError, Unauth
 from app.core.logging import bind, uid_hash
 from app.repositories.actions import ActionRepository
 from app.repositories.documents import DocumentRepository
+from app.repositories.github import GitHubRepository
 from app.repositories.jira_cache import JiraCacheRepository
 from app.repositories.jira_connections import JiraConnectionRepository
 from app.repositories.project_links import ProjectLinkRepository
@@ -30,11 +31,12 @@ from app.repositories.users import UserRepository
 from app.services.account import AccountService
 from app.services.action_edits import ActionEditService
 from app.services.actions import ActionService
-from app.services.chat import ChatService, shared_agent
+from app.services.chat import TOOLSETS, ChatService, shared_agent
 from app.services.confluence_actions import ConfluenceActionExecutor
 from app.services.confluence_links import ConfluenceLinkService
 from app.services.conversations import ConversationService
 from app.services.documents import DocumentService
+from app.services.github import GitHubService
 from app.services.jira_connections import JiraConnectionService
 from app.services.jira_issues import JiraIssueService
 from app.services.jira_projects import JiraProjectService
@@ -107,6 +109,15 @@ def get_jira_service(settings: Annotated[Settings, Depends(get_settings)]) -> Ji
     )
 
 
+def get_github_service(settings: Annotated[Settings, Depends(get_settings)]) -> GitHubService:
+    """GitHub só leitura (F17, ADR-010): mesma cifra dos tokens do Jira."""
+    db = _firestore(settings.gcp_project, settings.firestore_database)
+    return GitHubService(
+        GitHubRepository(db),
+        _cipher(settings.env, settings.kms_key_name, settings.local_cipher_key),
+    )
+
+
 def get_confluence_link_service(
     settings: Annotated[Settings, Depends(get_settings)],
     jira: Annotated[JiraConnectionService, Depends(get_jira_service)],
@@ -173,9 +184,14 @@ def get_chat_service(
         agent=shared_agent(llm, settings.agent_max_iterations),
         agents={
             toolset: shared_agent(llm, settings.agent_max_iterations, toolset)
-            for toolset in ("jira_pin", "docs", "docs_write", "space")
+            for toolset in TOOLSETS
+            if toolset != "jira"
         },
         confluence=ConfluenceLinkService(ProjectLinkRepository(db), jira),
+        github=GitHubService(
+            GitHubRepository(db),
+            _cipher(settings.env, settings.kms_key_name, settings.local_cipher_key),
+        ),
     )
 
 
@@ -198,7 +214,9 @@ def get_action_service(
     """Sem modelo de linguagem: a execução não passa pelo LLM (F06-RT-03)."""
     db = _firestore(settings.gcp_project, settings.firestore_database)
     docs = ConfluenceActionExecutor(ProjectLinkRepository(db), lambda: datetime.now(UTC))
-    return ActionService(ActionRepository(db), jira, settings, docs=docs)
+    return ActionService(
+        ActionRepository(db), jira, settings, docs=docs, projects_cache=JiraCacheRepository(db)
+    )
 
 
 def get_action_edit_service(
@@ -264,6 +282,7 @@ Account = Annotated[AccountService, Depends(get_account_service)]
 JiraConnections = Annotated[JiraConnectionService, Depends(get_jira_service)]
 Chat = Annotated[ChatService, Depends(get_chat_service)]
 Actions = Annotated[ActionService, Depends(get_action_service)]
+GitHub = Annotated[GitHubService, Depends(get_github_service)]
 ActionEdits = Annotated[ActionEditService, Depends(get_action_edit_service)]
 Conversations = Annotated[ConversationService, Depends(get_conversation_service)]
 JiraProjects = Annotated[JiraProjectService, Depends(get_jira_project_service)]

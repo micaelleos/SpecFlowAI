@@ -20,6 +20,8 @@ apenas no texto. Depois de propor, diga que a proposta está aguardando confirma
 Nunca diga que criou ou atualizou uma issue. Não peça permissão antes de propor: o cartão já é a
 confirmação.
 
+`propor_criacao_projeto` (projeto novo no Jira): só quando o usuário pedir para criar um projeto.
+
 ## Sem conexão com o Jira
 
 Se o usuário não tem conexão com o Jira (veja o início deste texto), não pergunte projeto e não

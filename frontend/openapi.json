@@ -65,7 +65,8 @@
               "update_issue",
               "create_page",
               "update_page",
-              "create_space"
+              "create_space",
+              "create_project"
             ],
             "title": "Kind",
             "type": "string"
@@ -805,6 +806,62 @@
         "title": "EpicSpec",
         "type": "object"
       },
+      "GitHubConnectionInput": {
+        "properties": {
+          "token": {
+            "format": "password",
+            "maxLength": 255,
+            "minLength": 20,
+            "title": "Token",
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "GitHubConnectionInput",
+        "type": "object"
+      },
+      "GitHubConnectionOut": {
+        "description": "Nunca o token: o login e os 4 últimos caracteres (F17-RT-01).",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_validated_at": {
+            "format": "date-time",
+            "title": "Last Validated At",
+            "type": "string"
+          },
+          "login": {
+            "title": "Login",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "invalid"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "token_hint": {
+            "title": "Token Hint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "login",
+          "token_hint",
+          "status",
+          "last_validated_at"
+        ],
+        "title": "GitHubConnectionOut",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1398,6 +1455,30 @@
         "title": "ProjectConfluenceOut",
         "type": "object"
       },
+      "ProjectRepoOut": {
+        "properties": {
+          "connected": {
+            "title": "Connected",
+            "type": "boolean"
+          },
+          "link": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RepoLinkOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "link",
+          "connected"
+        ],
+        "title": "ProjectRepoOut",
+        "type": "object"
+      },
       "ProposalPreview": {
         "description": "O cartão como ficaria com a edição, sem gravar (F14-RT-03).",
         "properties": {
@@ -1449,6 +1530,73 @@
           "url"
         ],
         "title": "Reference",
+        "type": "object"
+      },
+      "RepoLinkInput": {
+        "properties": {
+          "full_name": {
+            "maxLength": 201,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}$",
+            "title": "Full Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "full_name"
+        ],
+        "title": "RepoLinkInput",
+        "type": "object"
+      },
+      "RepoLinkOut": {
+        "properties": {
+          "linked_at": {
+            "format": "date-time",
+            "title": "Linked At",
+            "type": "string"
+          },
+          "repo": {
+            "$ref": "#/components/schemas/RepoOut"
+          }
+        },
+        "required": [
+          "repo",
+          "linked_at"
+        ],
+        "title": "RepoLinkOut",
+        "type": "object"
+      },
+      "RepoOut": {
+        "properties": {
+          "default_branch": {
+            "title": "Default Branch",
+            "type": "string"
+          },
+          "description": {
+            "default": "",
+            "title": "Description",
+            "type": "string"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "private": {
+            "title": "Private",
+            "type": "boolean"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "full_name",
+          "url",
+          "default_branch",
+          "private"
+        ],
+        "title": "RepoOut",
         "type": "object"
       },
       "RestoreIn": {
@@ -3105,6 +3253,371 @@
         ]
       }
     },
+    "/api/v1/github/connections": {
+      "get": {
+        "operationId": "list_connections_api_v1_github_connections_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Firebase-AppCheck",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Firebase-Appcheck"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GitHubConnectionOut"
+                  },
+                  "title": "Response List Connections Api V1 Github Connections Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Minha conexão com o GitHub (sem o token)",
+        "tags": [
+          "github"
+        ]
+      },
+      "post": {
+        "operationId": "connect_api_v1_github_connections_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Firebase-AppCheck",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Firebase-Appcheck"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GitHubConnectionInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GitHubConnectionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Já existe uma conexão"
+          },
+          "422": {
+            "description": "`github-invalid-token`: o GitHub recusou o token"
+          },
+          "502": {
+            "description": "GitHub inacessível"
+          }
+        },
+        "summary": "Valida o token fine-grained no GitHub e guarda a conexão (token cifrado)",
+        "tags": [
+          "github"
+        ]
+      }
+    },
+    "/api/v1/github/connections/{connection_id}": {
+      "delete": {
+        "operationId": "disconnect_api_v1_github_connections__connection_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connection_id",
+            "required": true,
+            "schema": {
+              "title": "Connection Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Firebase-AppCheck",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Firebase-Appcheck"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove a conexão e todos os vínculos de repositório",
+        "tags": [
+          "github"
+        ]
+      }
+    },
+    "/api/v1/github/connections/{connection_id}/validate": {
+      "post": {
+        "operationId": "validate_api_v1_github_connections__connection_id__validate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connection_id",
+            "required": true,
+            "schema": {
+              "title": "Connection Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Firebase-AppCheck",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Firebase-Appcheck"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GitHubConnectionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Testa o token guardado; se o GitHub recusar, a conexão fica inválida",
+        "tags": [
+          "github"
+        ]
+      }
+    },
+    "/api/v1/github/repos": {
+      "get": {
+        "operationId": "list_repos_api_v1_github_repos_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 100,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Firebase-AppCheck",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Firebase-Appcheck"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RepoOut"
+                  },
+                  "title": "Response List Repos Api V1 Github Repos Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "GitHub não conectado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Repositórios que o token vê (até 50), filtrados pelo nome",
+        "tags": [
+          "github"
+        ]
+      }
+    },
     "/api/v1/jira/connections": {
       "get": {
         "operationId": "list_connections_api_v1_jira_connections_get",
@@ -4097,6 +4610,236 @@
         "summary": "Vincula o projeto a um espaço do Confluence (confere o acesso antes)",
         "tags": [
           "confluence"
+        ]
+      }
+    },
+    "/api/v1/jira/projects/{key}/repo": {
+      "delete": {
+        "operationId": "delete_repo_api_v1_jira_projects__key__repo_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Z][A-Z0-9_]{1,9}$",
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Firebase-AppCheck",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Firebase-Appcheck"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Desvincula o repositório (nada muda no GitHub)",
+        "tags": [
+          "github"
+        ]
+      },
+      "get": {
+        "operationId": "get_repo_api_v1_jira_projects__key__repo_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Z][A-Z0-9_]{1,9}$",
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Firebase-AppCheck",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Firebase-Appcheck"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectRepoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Repositório vinculado ao projeto",
+        "tags": [
+          "github"
+        ]
+      },
+      "put": {
+        "operationId": "put_repo_api_v1_jira_projects__key__repo_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Z][A-Z0-9_]{1,9}$",
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Firebase-AppCheck",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Firebase-Appcheck"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepoLinkInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepoLinkOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "O token não vê o repositório"
+          },
+          "409": {
+            "description": "GitHub não conectado"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Vincula o projeto a um repositório que o token vê (confere o acesso antes)",
+        "tags": [
+          "github"
         ]
       }
     },

@@ -1,0 +1,6 @@
+{"id": "project_create_01", "category": "project_create", "expect_template": "kanban", "expect_name": "Portal do Cliente", "turns": ["Crie um projeto novo no Jira chamado Portal do Cliente, no modelo Kanban, para o time de atendimento."]}
+{"id": "project_create_02", "category": "project_create", "expect_template": "scrum", "expect_name": "App Financeiro", "turns": ["Quero começar um produto novo: crie no Jira o projeto App Financeiro."]}
+{"id": "project_create_03", "category": "project_create", "expect_template": "negocio", "expect_name": "Compras", "turns": ["Crie um projeto de negócio (só tarefas, sem sprints) chamado Compras para o time de suprimentos."]}
+{"id": "project_key_taken_01", "category": "project_key_taken", "taken": "ABC", "suggested": "ABC1", "turns": ["Crie um projeto Scrum chamado Loja Nova com a chave ABC."]}
+{"id": "project_no_spam_01", "category": "project_no_spam", "turns": ["Crie uma story: o cliente filtra Meus pedidos por período. Datas invertidas mostram erro. Fora de escopo: exportar. Testes de unidade e E2E do filtro."]}
+{"id": "project_no_spam_02", "category": "project_no_spam", "project": "ABC", "turns": ["Crie uma story no projeto: o cliente salva o cartão para a próxima compra. Fora de escopo: carteira digital. Testes de unidade e E2E do checkout. Pode propor direto."]}

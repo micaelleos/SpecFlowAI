@@ -13,6 +13,9 @@ import type {
   JiraProject,
   ProductApi,
   ProjectDocs,
+  CodeRepo,
+  GitHubConnection,
+  ProjectRepo,
   Usage,
 } from './types'
 import {
@@ -36,6 +39,31 @@ type ApiStatuses = components['schemas']['StatusOut']
 type ApiPrompt = components['schemas']['AgentPrompt']
 type ApiUsage = components['schemas']['UsageOut']
 type ApiProjectDocs = components['schemas']['ProjectConfluenceOut']
+type ApiGitHub = components['schemas']['GitHubConnectionOut']
+type ApiRepo = components['schemas']['RepoOut']
+type ApiRepoLink = components['schemas']['RepoLinkOut']
+type ApiProjectRepo = components['schemas']['ProjectRepoOut']
+
+export const gitHubFromApi = (c: ApiGitHub): GitHubConnection => ({
+  id: c.id,
+  login: c.login,
+  tokenLast4: c.token_hint,
+  validatedAt: c.last_validated_at,
+  status: c.status,
+})
+
+export const repoFromApi = (r: ApiRepo): CodeRepo => ({
+  fullName: r.full_name,
+  url: r.url,
+  defaultBranch: r.default_branch,
+  private: r.private,
+  description: r.description ?? '',
+})
+
+const repoLinkFromApi = (l: ApiRepoLink): NonNullable<ProjectRepo['link']> => ({
+  repo: repoFromApi(l.repo),
+  linkedAt: l.linked_at,
+})
 type ApiDocument = components['schemas']['DocumentOut']
 type ApiLink = components['schemas']['ConfluenceLinkOut']
 type ApiSpace = components['schemas']['ConfluenceSpaceOut']
@@ -174,6 +202,12 @@ export function createHttpProductApi(getToken: TokenGetter): ProductApi {
   }
 
   const projectDocs = (key: string) => `/api/v1/jira/projects/${encodeURIComponent(key)}/confluence`
+  const projectRepo = (key: string) => `/api/v1/jira/projects/${encodeURIComponent(key)}/repo`
+  const GITHUB = '/api/v1/github/connections'
+  const gitHub = async (): Promise<GitHubConnection | null> => {
+    const [first] = await json<ApiGitHub[]>(GITHUB)
+    return first ? gitHubFromApi(first) : null
+  }
   const conversation = (id: string) => `${CONVERSATIONS}/${encodeURIComponent(id)}`
 
   return {
@@ -185,6 +219,44 @@ export function createHttpProductApi(getToken: TokenGetter): ProductApi {
       chat: CHAT_ENABLED,
       usage: true,
       docs: true,
+      github: true,
+    },
+    // F17: GitHub só leitura.
+    getGitHubConnection: gitHub,
+    connectGitHub: async (token) =>
+      gitHubFromApi(await json<ApiGitHub>(GITHUB, send('POST', { token }))),
+    validateGitHub: async () => {
+      const current = await gitHub()
+      if (!current) throw Object.assign(new Error('not found'), { code: 'github-not-connected' })
+      return gitHubFromApi(
+        await json<ApiGitHub>(`${GITHUB}/${encodeURIComponent(current.id)}/validate`, {
+          method: 'POST',
+        }),
+      )
+    },
+    disconnectGitHub: async () => {
+      const current = await gitHub()
+      if (current)
+        await apiFetch(`${GITHUB}/${encodeURIComponent(current.id)}`, getToken, {
+          method: 'DELETE',
+        })
+    },
+    listGitHubRepos: async (query) =>
+      (await json<ApiRepo[]>(`/api/v1/github/repos?${new URLSearchParams({ q: query })}`)).map(
+        repoFromApi,
+      ),
+    getProjectRepo: async (key) => {
+      const r = await json<ApiProjectRepo>(projectRepo(key))
+      return { link: r.link ? repoLinkFromApi(r.link) : null, connected: r.connected }
+    },
+    linkProjectRepo: async (key, fullName) => ({
+      link: repoLinkFromApi(
+        await json<ApiRepoLink>(projectRepo(key), send('PUT', { full_name: fullName })),
+      ),
+      connected: true,
+    }),
+    unlinkProjectRepo: async (key) => {
+      await apiFetch(projectRepo(key), getToken, { method: 'DELETE' })
     },
     // F19: documentação do projeto no Confluence.
     getProjectDocs: async (key) => projectDocsFromApi(await json<ApiProjectDocs>(projectDocs(key))),

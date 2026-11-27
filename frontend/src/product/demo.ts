@@ -1,6 +1,9 @@
 import type {
   DocSpace,
   ProjectDocs,
+  CodeRepo,
+  GitHubConnection,
+  ProjectRepo,
   ChatMessage,
   ConversationSummary,
   CreatedIssue,
@@ -268,9 +271,27 @@ export function createDemoProductApi(now: () => number = Date.now): ProductApi {
     { key: 'AUTH', name: 'Autenticação', url: 'https://demo.atlassian.net/wiki/spaces/AUTH' },
   ]
   const docLinks = new Map<string, NonNullable<ProjectDocs['link']>>()
+  // F17: GitHub de demonstração; o token "github_pat_errado…" é recusado.
+  let gitHub: GitHubConnection | null = null
+  const repoLinks = new Map<string, NonNullable<ProjectRepo['link']>>()
+  const demoRepos: CodeRepo[] = [
+    {
+      fullName: 'acme/loja-online',
+      url: 'https://github.com/acme/loja-online',
+      defaultBranch: 'main',
+      private: true,
+      description: 'Loja online',
+    },
+    {
+      fullName: 'acme/app-financeiro',
+      url: 'https://github.com/acme/app-financeiro',
+      defaultBranch: 'main',
+      private: true,
+    },
+  ]
 
   return {
-    features: { jira: true, projects: true, chat: true, usage: true, docs: true },
+    features: { jira: true, projects: true, chat: true, usage: true, docs: true, github: true },
     demo: true,
     getJiraConnection: async () => connection,
     connectJira: async ({ site, email, token }) => {
@@ -509,6 +530,40 @@ export function createDemoProductApi(now: () => number = Date.now): ProductApi {
     },
     searchDocSpaces: async (query) =>
       docSpaces.filter((d) => `${d.key} ${d.name}`.toLowerCase().includes(query.toLowerCase())),
+    getGitHubConnection: async () => gitHub,
+    connectGitHub: async (token) => {
+      if (token.includes('errado'))
+        throw Object.assign(new Error('rejected'), { code: 'github-invalid-token' })
+      gitHub = {
+        id: 'gh-1',
+        login: 'acme-po',
+        tokenLast4: token.slice(-4),
+        validatedAt: new Date(now()).toISOString(),
+        status: 'ok',
+      }
+      return gitHub
+    },
+    validateGitHub: async () => {
+      if (!gitHub) throw Object.assign(new Error('none'), { code: 'github-not-connected' })
+      return gitHub
+    },
+    disconnectGitHub: async () => {
+      gitHub = null
+      repoLinks.clear()
+    },
+    listGitHubRepos: async (query) =>
+      gitHub ? demoRepos.filter((r) => r.fullName.includes(query.toLowerCase())) : [],
+    getProjectRepo: async (key) => ({ link: repoLinks.get(key) ?? null, connected: !!gitHub }),
+    linkProjectRepo: async (key, fullName) => {
+      const repo = demoRepos.find((r) => r.fullName === fullName)
+      if (!repo) throw Object.assign(new Error('not found'), { code: 'github-repo-not-found' })
+      const link = { repo, linkedAt: new Date(now()).toISOString() }
+      repoLinks.set(key, link)
+      return { link, connected: true }
+    },
+    unlinkProjectRepo: async (key) => {
+      repoLinks.delete(key)
+    },
   }
 }
 

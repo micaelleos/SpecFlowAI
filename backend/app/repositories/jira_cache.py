@@ -25,3 +25,7 @@ class JiraCacheRepository:
 
     def set_projects(self, uid: str, data: dict[str, Any]) -> None:
         self._ref(uid).set(data)
+
+    def clear_projects(self, uid: str) -> None:
+        """Depois de criar um projeto (F22-RT-04): a próxima lista vem do Jira."""
+        self._ref(uid).delete()

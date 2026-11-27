@@ -296,6 +296,32 @@ class JiraClient:
         """`PUT /rest/api/3/issue/{key}` só com os campos permitidos (F06-RF-06, D06)."""
         await self._write("PUT", f"/rest/api/3/issue/{key}", {"fields": fields})
 
+    async def validate_project_key(self, key: str) -> str | None:
+        """`GET /rest/api/3/projectvalidate/key` (sem permissão exigida): o problema da chave
+        (em uso, formato) ou `None` se ela serve (F22-RF-02)."""
+        response = await self._request(
+            "GET", "/rest/api/3/projectvalidate/key", params={"key": key}
+        )
+        data = response.json() if response.content else {}
+        errors = (data.get("errors") or {}) if isinstance(data, dict) else {}
+        messages = [str(m) for m in errors.values()]
+        if isinstance(data, dict):
+            messages += [str(m) for m in data.get("errorMessages") or []]
+        return "; ".join(messages) or None
+
+    async def suggest_project_key(self, key: str) -> str:
+        """`GET /rest/api/3/projectvalidate/validProjectKey`: uma chave livre parecida."""
+        response = await self._request(
+            "GET", "/rest/api/3/projectvalidate/validProjectKey", params={"key": key}
+        )
+        return str(response.json() or "")
+
+    async def create_project(self, body: dict[str, Any]) -> JiraCreated:
+        """`POST /rest/api/3/project` (F22): exige "Administer Jira"; nunca repetido (F22-RT-03)."""
+        response = await self._write("POST", "/rest/api/3/project", body)
+        key = str(response.json().get("key") or body["key"])
+        return JiraCreated(key, f"{self.site_url}/browse/{key}")
+
     async def myself(self) -> JiraAccount:
         """`GET /rest/api/3/myself`: valida a credencial e devolve a conta (F04-RF-02)."""
         data = (await self._request("GET", "/rest/api/3/myself")).json()
