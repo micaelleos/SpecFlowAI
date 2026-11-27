@@ -154,4 +154,5 @@ def test_instrucoes_de_convergir_e_adr_so_com_a_escrita() -> None:
         ).split()
     )
     assert '"Escrita da documentação"' in v2
-    assert "você não escreve no Confluence" in v2
+    assert "neste turno você não tem as ferramentas de escrita do Confluence" in v2
+    assert "você não escreve no Confluence" not in v2

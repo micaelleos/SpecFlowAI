@@ -9,7 +9,7 @@ from app.agent.fake_llm import ScriptedChatModel
 from app.agent.tools.confluence_write_tools import WRITE_NOTE
 from app.agent.tools.context import ConfluenceReader, DocsWriter, SpaceCreator
 from app.core.config import Settings
-from app.services.chat import NO_DOCS_NOTE, SPACE_NOTE, ChatService
+from app.services.chat import NO_DOCS_NOTE, NO_PROJECT_NOTE, SPACE_NOTE, ChatService
 from app.services.conversations import ConversationService
 from app.services.jira_connections import JiraConnectionService
 from tests.chat_fakes import NOW, FakeJiraService, MemoryChatStore, call
@@ -110,7 +110,22 @@ async def test_flag_desligada_ou_sem_projeto_nao_consulta(enabled: bool, project
     await _run(llm, links, enabled=enabled, project=project)
     assert links.asked == []
     assert "Confluence" not in _system(llm).split("## Ferramentas")[0][-200:]
-    assert "## Documentação do projeto" not in _system(llm)
+    assert (NO_PROJECT_NOTE in _system(llm)) is (project is None)
+    if not enabled:
+        assert "## Documentação do projeto" not in _system(llm)
+
+
+@pytest.mark.req("F19-RF-04")
+@pytest.mark.req("F20-RF-02")
+async def test_sem_projeto_fixado_explica_como_ligar_a_documentacao() -> None:
+    """Teste do PO em prd (2026-11-27): sem projeto, o agente dizia que não escrevia no
+    Confluence."""
+    llm = ScriptedChatModel(responses=[AIMessage("ok")])
+    await _run(llm, FakeLinks(FakeConfluenceReader()), project=None, write=True)
+    system = _system(llm)
+    assert NO_PROJECT_NOTE in system
+    assert "Chat about this project" in system
+    assert WRITE_NOTE not in system
 
 
 @pytest.mark.req("F19-RF-09")

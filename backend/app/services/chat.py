@@ -78,6 +78,16 @@ NO_DOCS_NOTE = (
     "a ele). Siga sem a documentação; diga uma única vez na conversa que o vínculo é feito em "
     "Projects, se ajudar."
 )
+# Conversa sem projeto fixado: sem ferramentas do Confluence neste turno, mas o agente não pode
+# dizer que "não escreve no Confluence" (teste do PO em prd, 2026-11-27).
+NO_PROJECT_NOTE = (
+    "## Documentação do projeto\n"
+    "Esta conversa não está fixada em um projeto, então neste turno você não tem acesso ao "
+    "Confluence (nem leitura nem escrita). Se o usuário perguntar sobre a documentação do projeto "
+    "ou pedir para criar ou alterar páginas, explique que isso funciona numa conversa fixada num "
+    "projeto com espaço vinculado: em Jira projects, abra Project docs do projeto, vincule o "
+    "espaço e use Chat about this project. Não diga que você não consegue escrever no Confluence."
+)
 ERRORS = {
     "turn-timeout": "A resposta demorou demais. Tente de novo.",
     "tool-limit": (
@@ -500,10 +510,11 @@ class ChatService:
         if (
             self._confluence is None
             or not self._settings.confluence_enabled
-            or not project_key
             or sink.connection_id is None
         ):
             return "", None
+        if not project_key:
+            return NO_PROJECT_NOTE, None
         write = self._settings.confluence_write_enabled
         found = await self._confluence.reader_for(uid, project_key, sink.connection_id)
         if found is None:
