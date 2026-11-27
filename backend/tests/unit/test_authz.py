@@ -11,10 +11,12 @@ from fastapi.testclient import TestClient
 from app.agent.fake_llm import EchoChatModel
 from app.api.deps import (
     get_account_service,
+    get_action_edit_service,
     get_action_service,
     get_chat_service,
     get_conversation_service,
     get_document_service,
+    get_github_service,
     get_jira_issue_service,
     get_jira_service,
     get_usage_service,
@@ -24,15 +26,17 @@ from app.core.config import Settings, get_settings
 from app.core.crypto import LocalFernetCipher
 from app.main import create_app
 from app.services.account import AccountService
+from app.services.action_edits import ActionEditService
 from app.services.actions import ActionService
 from app.services.chat import ChatService
 from app.services.conversations import ConversationService
 from app.services.documents import DocumentService
+from app.services.github import GitHubService
 from app.services.jira_connections import JiraConnectionService
 from app.services.jira_issues import JiraIssueService
 from app.services.usage import UsageService
 from tests.chat_fakes import MemoryChatStore
-from tests.fakes import FakeVerifier, MemoryJiraStore, MemoryStore
+from tests.fakes import FakeVerifier, MemoryGitHubStore, MemoryJiraStore, MemoryStore
 
 _OPENAPI = create_app().openapi()
 _HTTP_METHODS = {"get", "post", "put", "patch", "delete"}
@@ -76,6 +80,10 @@ def client(verifier: FakeVerifier) -> Iterator[TestClient]:
     app.dependency_overrides[get_document_service] = lambda: documents
     usage = UsageService(chat_store, Settings(env="test"))
     app.dependency_overrides[get_usage_service] = lambda: usage
+    github = GitHubService(MemoryGitHubStore(), LocalFernetCipher())
+    app.dependency_overrides[get_github_service] = lambda: github
+    edits = ActionEditService(chat_store)
+    app.dependency_overrides[get_action_edit_service] = lambda: edits
     with TestClient(app) as c:
         yield c
 

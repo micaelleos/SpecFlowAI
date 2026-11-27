@@ -97,3 +97,39 @@ class MemoryLinkStore:
 
     def delete(self, uid: str, project_key: str) -> None:
         self.docs.pop((uid, project_key), None)
+
+
+class MemoryGitHubStore:
+    """`users/{uid}/github_connections` e `users/{uid}/repo_links` em memória (F17)."""
+
+    def __init__(self) -> None:
+        self.connections: dict[str, dict[str, dict[str, Any]]] = {}
+        self.links: dict[tuple[str, str], dict[str, Any]] = {}
+        self._next = 0
+
+    def list_connections(self, uid: str) -> list[dict[str, Any]]:
+        return [{"id": k, **copy.deepcopy(v)} for k, v in self.connections.get(uid, {}).items()]
+
+    def create_connection(self, uid: str, data: dict[str, Any]) -> str:
+        self._next += 1
+        cid = f"gh-{self._next}"
+        self.connections.setdefault(uid, {})[cid] = copy.deepcopy(data)
+        return cid
+
+    def update_connection(self, uid: str, connection_id: str, data: dict[str, Any]) -> None:
+        self.connections[uid][connection_id].update(copy.deepcopy(data))
+
+    def delete_connection(self, uid: str, connection_id: str) -> None:
+        self.connections.get(uid, {}).pop(connection_id, None)
+        for key in [k for k in self.links if k[0] == uid]:
+            del self.links[key]
+
+    def get_link(self, uid: str, project_key: str) -> dict[str, Any] | None:
+        doc = self.links.get((uid, project_key))
+        return copy.deepcopy(doc) if doc else None
+
+    def set_link(self, uid: str, project_key: str, data: dict[str, Any]) -> None:
+        self.links[(uid, project_key)] = copy.deepcopy(data)
+
+    def delete_link(self, uid: str, project_key: str) -> None:
+        self.links.pop((uid, project_key), None)

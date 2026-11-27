@@ -113,6 +113,14 @@ uv run --project backend pytest -q scripts --rootdir scripts -p no:cacheprovider
   version in a transaction only if `base_hash` is the current hash, and the first user edit keeps `agentVersion` for
   "Restore". `confirm` takes the shown `payload_hash` (409 `action-changed`). "Refine with AI" sends a chat message, and the
   agent uses `ler_proposta`/`revisar_proposta`, which revise the same action, never a new card. Evals: `evals/datasets/f14_v1.jsonl`.
+- **Code repository (F17, ADR-010):** read-only GitHub with a fine-grained token (`Contents: read`), validated on `GET /user`
+  and encrypted with the same KMS cipher as Jira; only `https://api.github.com`, no redirects (`integrations/github/`).
+  `GitHubService` (`/api/v1/github/connections|repos`, `/api/v1/jira/projects/{key}/repo`) keeps `users/{uid}/github_connections`
+  and `users/{uid}/repo_links/{key}`; disconnecting deletes every link. No code is stored. When the conversation's project
+  has a repo, the chat adds `repo_note` (AGENTS.md/CLAUDE.md/copilot instructions + root) and the `<toolset>_repo` variant with
+  `listar_arquivos_do_repositorio`/`buscar_no_repositorio`/`ler_arquivo_do_repositorio` (`agent/tools/repo_tools.py`, via the
+  `RepoReader` interface; limits 100 KB/file, 20 files/turn). A rejected token marks the connection invalid and the turn goes
+  on without the code. Evals: `evals/datasets/f17_v1.jsonl`; AT: `e2e/f17-repositorio.spec.ts` (`E2E_GITHUB_TOKEN`/`E2E_GITHUB_REPO`).
 - Target design (agent graph, tools, SSE event schema, Firestore model, API v1) is in
   `docs/modernizacao/03-arquitetura.md`; decisions in `docs/modernizacao/adr/`.
 

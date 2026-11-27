@@ -25,6 +25,31 @@ export interface Features {
   usage: boolean
   /** F19: vincular o projeto a um espaço do Confluence. */
   docs: boolean
+  /** F17: conectar o GitHub e vincular um repositório ao projeto. */
+  github?: boolean
+}
+
+/** Conexão GitHub por token fine-grained só de leitura (F17, ADR-010); o token nunca volta. */
+export interface GitHubConnection {
+  id: string
+  login: string
+  tokenLast4: string
+  validatedAt: string
+  status: 'ok' | 'invalid'
+}
+
+export interface CodeRepo {
+  fullName: string
+  url: string
+  defaultBranch: string
+  private: boolean
+  description?: string
+}
+
+/** Repositório vinculado ao projeto (F17-RF-01); `connected: false` sem GitHub conectado. */
+export interface ProjectRepo {
+  link: { repo: CodeRepo; linkedAt: string } | null
+  connected: boolean
 }
 
 /** `invalid`: o Jira recusou o token guardado; o app pede reconexão (F04-RF-06). */
@@ -341,4 +366,15 @@ export interface ProductApi {
   unlinkProjectDocs(projectKey: string): Promise<void>
   /** Até 25 espaços do site, filtrados por nome ou chave. */
   searchDocSpaces(query: string): Promise<DocSpace[]>
+  /** F17: GitHub só leitura. */
+  getGitHubConnection(): Promise<GitHubConnection | null>
+  connectGitHub(token: string): Promise<GitHubConnection>
+  validateGitHub(): Promise<GitHubConnection>
+  /** Remove a conexão e todos os vínculos de repositório (F17-RF-04). */
+  disconnectGitHub(): Promise<void>
+  /** Até 50 repositórios que o token vê, filtrados pelo nome. */
+  listGitHubRepos(query: string): Promise<CodeRepo[]>
+  getProjectRepo(projectKey: string): Promise<ProjectRepo>
+  linkProjectRepo(projectKey: string, fullName: string): Promise<ProjectRepo>
+  unlinkProjectRepo(projectKey: string): Promise<void>
 }
