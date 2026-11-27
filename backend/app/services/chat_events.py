@@ -43,6 +43,7 @@ class ActionProposedEvent(_Event):
         "update_page",
         "create_space",
         "create_project",
+        "create_pull_request",
     ]
     preview: dict[str, Any] = Field(
         description=(

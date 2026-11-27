@@ -433,3 +433,67 @@ describe('F22-RF-01 F22-RF-03 cartão de criar projeto no Jira', () => {
     )
   })
 })
+
+describe('F18-RF-01 F18-RF-02 cartão do PR com as specs', () => {
+  const files = [
+    {
+      path: 'specs/005-pagamentos/spec.md',
+      content: '# 005 — Pagamentos\n\n### ABC-11 — Pagar com Pix',
+    },
+    { path: 'specs/005-pagamentos/tasks.md', content: '- [ ] T001 [ABC-11] Pagar com Pix' },
+  ]
+  const pr: Partial<ProposedAction> = {
+    kind: 'create_pull_request',
+    title: '',
+    labels: [],
+    sections: [],
+    readiness: null,
+    payloadHash: 'hpr',
+    pullRequest: {
+      repo: 'po/loja',
+      repoUrl: 'https://github.com/po/loja',
+      base: 'main',
+      branch: 'specflow/abc-10',
+      title: 'docs(spec): ABC-10 — Pagamentos',
+      epicKey: 'ABC-10',
+      issueKeys: ['ABC-10', 'ABC-11'],
+      files,
+    },
+  }
+
+  it('mostra repositório, branch e arquivos e só abre o PR no Confirm', async () => {
+    const done: ProposedAction = {
+      ...base,
+      ...pr,
+      status: 'done',
+      resultKey: '#7',
+      resultUrl: 'https://github.com/po/loja/pull/7',
+      warning: 'o link do PR no épico ABC-10 não foi criado no Jira.',
+    }
+    const confirmAction = vi.fn(async () => done)
+    renderCard(pr, { confirmAction })
+    const card = screen.getByRole('region', { name: 'Open a pull request in po/loja' })
+    for (const text of [
+      'specflow/abc-10 → main',
+      'ABC-10, ABC-11',
+      'docs(spec): ABC-10 — Pagamentos',
+    ])
+      expect(within(card).getByText(text)).toBeInTheDocument()
+    expect(within(card).getByText('Files (2)')).toBeInTheDocument()
+    expect(within(card).getByText('specs/005-pagamentos/tasks.md')).toBeInTheDocument()
+    expect(within(card).getByText(/T001 \[ABC-11\] Pagar com Pix/)).toBeInTheDocument()
+    expect(within(card).queryByRole('button', { name: 'Edit' })).toBeNull()
+
+    await userEvent.click(
+      within(card).getByRole('button', { name: 'Confirm and open pull request' }),
+    )
+
+    expect(confirmAction).toHaveBeenCalledWith('a1', 'hpr')
+    expect(await within(card).findByText(/Opened pull request #7/)).toBeInTheDocument()
+    expect(within(card).getByRole('link', { name: 'Open on GitHub' })).toHaveAttribute(
+      'href',
+      'https://github.com/po/loja/pull/7',
+    )
+    expect(within(card).getByText(/não foi criado no Jira/)).toBeInTheDocument()
+  })
+})

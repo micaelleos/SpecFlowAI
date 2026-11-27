@@ -43,6 +43,8 @@ from app.agent.tools.context import (
 )
 from app.agent.tools.conversation_tools import PIN_TOOL, PIN_TOOLS
 from app.agent.tools.conversation_tools import PROGRESS as PIN_PROGRESS
+from app.agent.tools.export_tools import EXPORT_TOOLS
+from app.agent.tools.export_tools import PROGRESS as EXPORT_PROGRESS
 from app.agent.tools.jira_tools import JIRA_TOOLS, PROGRESS
 from app.agent.tools.project_tools import PROGRESS as PROJECT_PROGRESS
 from app.agent.tools.project_tools import PROJECT_TOOLS
@@ -69,6 +71,7 @@ from app.services.conversation_title import generate_title, provisional_title
 from app.services.jira_connections import JiraConnectionService
 from app.services.jira_reader import JiraReaderAdapter
 from app.services.repo_reader import GitHubRepoReader
+from app.services.spec_export import ExportStore, RepoSpecExporter
 from app.services.usage import UsageService, usage_day
 
 log = logging.getLogger("app.chat")
@@ -182,10 +185,13 @@ _BASE_TOOLSETS: dict[str, list[BaseTool]] = {
 # existe no turno com repositório vinculado.
 TOOLSETS: dict[str, list[BaseTool]] = {
     **_BASE_TOOLSETS,
-    **{f"{name}_repo": [*tools, *REPO_TOOLS] for name, tools in _BASE_TOOLSETS.items()},
+    **{
+        f"{name}_repo": [*tools, *REPO_TOOLS, *EXPORT_TOOLS]  # F18: exportar só com repositório
+        for name, tools in _BASE_TOOLSETS.items()
+    },
 }
 ToolSet = str
-ALL_PROGRESS = {**PROGRESS, **PIN_PROGRESS, **REPO_PROGRESS, **PROJECT_PROGRESS}
+ALL_PROGRESS = {**PROGRESS, **PIN_PROGRESS, **REPO_PROGRESS, **PROJECT_PROGRESS, **EXPORT_PROGRESS}
 REPO_UNAVAILABLE_NOTE = (
     "## Repositório do código do projeto\n"
     "O projeto tem um repositório vinculado, mas o GitHub não respondeu (ou recusou o token). Siga "
@@ -618,6 +624,10 @@ class ChatService:
             await client.aclose()
             return REPO_UNAVAILABLE_NOTE, None
         ctx.repo = reader
+        if ctx.jira is not None and isinstance(self._store, ExportStore):
+            # F18: as specs exportadas saem do histórico; os links apontam para o site do Jira.
+            site = str(getattr(ctx.actions, "site_url", "") or "")
+            ctx.spec_exporter = RepoSpecExporter(self._store, uid, reader, reader.client, site)
         return note, reader
 
     async def _docs_note(

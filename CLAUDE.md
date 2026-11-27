@@ -127,6 +127,14 @@ uv run --project backend pytest -q scripts --rootdir scripts -p no:cacheprovider
   `ActionService._execute_project` posts `/rest/api/3/project` with the connection's account as lead (needs "Administer Jira";
   403 → `jira-project-forbidden`), pins the project on a conversation without one (F21 rule) and clears the F09 projects cache.
   Evals: `evals/datasets/f22_v1.jsonl`; AT-F22-01 writes to Jira (`E2E_JIRA_WRITE=1`).
+- **Exporting specs to the repo (F18, ADR-011):** `propor_exportacao_para_repositorio` (`agent/tools/export_tools.py`, only in
+  `<toolset>_repo`) asks `RepoSpecExporter` (`services/spec_export.py`) for a `create_pull_request` draft built from the F10
+  history (epic `specActionId` + `child_actions` by `payload.parent_key`), rendered with `to_markdown` (no LLM) into
+  `specs/<nnn>-<slug>/spec.md` + `tasks.md`. After Confirm, `ActionService._execute_pull_request` creates `specflow/<key>` (never the
+  default branch), puts the files, opens the PR (same F17 token, needs Contents/Pull requests write; 403 → `github-write-forbidden`)
+  and adds a Jira remote link to the epic (failure = `result.warning`). Audit `github_write`. "Export to repository" on epics in
+  Created issues opens the chat with the request. Evals: `evals/datasets/f18_v1.jsonl`; AT: `e2e/f18-exportar.spec.ts`
+  (`E2E_GITHUB_WRITE=1` for AT-F18-01).
 - Target design (agent graph, tools, SSE event schema, Firestore model, API v1) is in
   `docs/modernizacao/03-arquitetura.md`; decisions in `docs/modernizacao/adr/`.
 

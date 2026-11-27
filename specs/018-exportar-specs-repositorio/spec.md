@@ -97,12 +97,16 @@ Funcionalidade: Exportar specs para o repositório
 ### 10. Rastreabilidade
 | Requisito | Teste(s) | Status |
 |---|---|---|
-| F18-RF-01 | — | ⏳ |
-| F18-RF-02 | — | ⏳ |
-| F18-RF-03 | — | ⏳ |
-| F18-RF-04 | — | ⏳ |
-| F18-RF-05 | — | ⏳ |
+| F18-RF-01 | `test_spec_export.py::test_rascunho_com_spec_e_tasks`, `test_export_tools.py::test_propoe_o_pr_sem_escrever`, `ActionCard.test.tsx` (F18-RF-01), `IssuesPage.test.tsx` (F18-RF-01), AT-F18-02 | ✅ |
+| F18-RF-02 | `test_github_write.py::test_branch_arquivo_e_pr`, `test_export_actions.py::test_confirmar_abre_o_pr_e_liga_o_epico`, `ActionCard.test.tsx` (F18-RF-02), AT-F18-01 | ✅ |
+| F18-RF-03 | `test_spec_export.py::test_rascunho_com_spec_e_tasks`, AT-F18-01 | ✅ |
+| F18-RF-04 | `test_github_write.py::test_link_remoto_no_jira`, `test_export_actions.py::test_confirmar_abre_o_pr_e_liga_o_epico`, `test_export_actions.py::test_link_no_jira_falha_vira_aviso` | ✅ |
+| F18-RF-05 | `test_spec_export.py::test_so_epicos_do_specflow_com_historias`, `test_export_tools.py` (sem repositório, épico fora do histórico, prompt), `test_export_actions.py::test_sem_permissao_de_escrita`, AT-F18-03 | ✅ |
 
 ### 11. Evidências
 | Data | Versão/commit | Ambiente | Execução (link CI) | Resultado | Aceito por |
 |---|---|---|---|---|---|
+| 2026-11-27 | branch `feat/F18-exportar-specs-repositorio` | local | `make lint`, `make test` (backend 919, frontend 191), `make trace` | OK | — |
+| 2026-11-27 | branch `feat/F18-exportar-specs-repositorio` | local (Vertex AI, `gemini-3.5-flash-lite`) | `evals/run.py --dataset f18_v1.jsonl` (`…-f18.json`, `…-f18-run2.json`, `…-f18-run3.json`) | 1ª execução 5/6: sem repositório, o agente não sabia que a exportação existe (`export_no_repo_01`). Com uma linha no prompt, 6/6 em duas execuções | — |
+| 2026-11-27 | branch `feat/F18-exportar-specs-repositorio` | local (Vertex AI) | regressão F05, F14, F17, F19, F20, F21 e F22 com o prompt final (`…-f18-f05.json`, `…-f18-f14.json`, `…-f18-f17.json`, `…-f18-f19_v1.json`, `…-f18-f20_v1.json`, `…-f18-pin.json`, `…-f18-f22.json`) | Todas as métricas em 100% | — |
+| 2026-11-27 | branch `feat/F18-exportar-specs-repositorio` | local + sandbox Atlassian (só leitura) | `E2E_REAL_LLM=1 npx playwright test e2e/f18-exportar.spec.ts` | AT-F18-03 ✅: o agente pede para vincular um repositório e não há cartão. AT-F18-02 aguarda `E2E_GITHUB_TOKEN`/`E2E_GITHUB_REPO`. AT-F18-01 aguarda `E2E_GITHUB_WRITE=1`, autorizado pelo PO | — |

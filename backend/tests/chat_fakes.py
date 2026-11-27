@@ -300,6 +300,15 @@ class MemoryChatStore:
         return sorted(docs, key=lambda d: d["updatedAt"], reverse=True)
 
     # ---- F10: histórico de issues
+    def child_actions(self, uid: str, epic_key: str) -> list[dict[str, Any]]:
+        return [
+            copy.deepcopy(a)
+            for a in self.actions.get(uid, [])
+            if a.get("kind") == "create_issue"
+            and a.get("status") == "done"
+            and (a.get("payload") or {}).get("parent_key") == epic_key
+        ]
+
     def get_issue(self, uid: str, key: str) -> dict[str, Any] | None:
         doc = self.issues.get(uid, {}).get(key)
         return None if doc is None else {"key": key, **copy.deepcopy(doc)}

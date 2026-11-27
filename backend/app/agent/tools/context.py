@@ -127,8 +127,24 @@ class SpaceCreator(Protocol):
 
 
 ActionKind = Literal[
-    "create_issue", "update_issue", "create_page", "update_page", "create_space", "create_project"
+    "create_issue",
+    "update_issue",
+    "create_page",
+    "update_page",
+    "create_space",
+    "create_project",
+    "create_pull_request",
 ]
+
+
+class SpecExportError(Exception):
+    """A exportação não cabe (épico fora do histórico, sem histórias…); a mensagem vai ao modelo."""
+
+
+class SpecExporter(Protocol):
+    """Prepara o PR com as specs do épico no repositório vinculado (F18); não escreve nada."""
+
+    async def draft(self, epic_key: str) -> PageDraft: ...
 
 
 @dataclass(frozen=True)
@@ -216,6 +232,8 @@ class ToolContext:
     space_creator: SpaceCreator | None = None
     # Repositório vinculado ao projeto (F17); `None` sem vínculo, sem conexão ou token recusado.
     repo: RepoReader | None = None
+    # F18: exportar specs por PR; só existe com repositório vinculado.
+    spec_exporter: SpecExporter | None = None
     # F21: só em conversa sem projeto; `pinned` guarda o projeto fixado neste turno.
     pinner: ConversationPinner | None = None
     pinned: str | None = None

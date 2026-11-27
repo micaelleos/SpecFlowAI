@@ -368,16 +368,28 @@ function IssuesList() {
                     </td>
                     <td className="px-4 py-3">
                       {i.hasSpec ? (
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          aria-label={t.issues.copyLabel(i.key)}
-                          disabled={copy.isPending}
-                          onClick={() => copy.mutate(i.key)}
-                          className="whitespace-nowrap"
-                        >
-                          {t.issues.copy}
-                        </Button>
+                        <div className="flex flex-col items-start gap-1.5">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            aria-label={t.issues.copyLabel(i.key)}
+                            disabled={copy.isPending}
+                            onClick={() => copy.mutate(i.key)}
+                            className="whitespace-nowrap"
+                          >
+                            {t.issues.copy}
+                          </Button>
+                          {i.type === 'Epic' && (
+                            // F18: o pedido já vai escrito numa conversa do projeto; enviar é do usuário.
+                            <Link
+                              to={`/chat?projeto=${encodeURIComponent(i.projectKey)}&pedido=${encodeURIComponent(t.issues.exportRequest(i.key))}`}
+                              aria-label={t.issues.exportRepoLabel(i.key)}
+                              className="text-xs font-medium whitespace-nowrap text-indigo-700 underline"
+                            >
+                              {t.issues.exportRepo}
+                            </Link>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-xs text-zinc-600">{t.issues.noSpec}</span>
                       )}
