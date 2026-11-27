@@ -15,7 +15,13 @@ import type {
   ProjectDocs,
   Usage,
 } from './types'
-import { type ApiAction, fromApiAction, toActionProblem } from './actions'
+import {
+  type ApiAction,
+  type ApiProposalPreview,
+  fromApiAction,
+  fromPreview,
+  toActionProblem,
+} from './actions'
 import { unavailableProductApi } from './unavailable'
 
 type ApiConnection = components['schemas']['JiraConnection']
@@ -136,13 +142,11 @@ export function createHttpProductApi(getToken: TokenGetter): ProductApi {
     body: JSON.stringify(body),
   })
 
-  const decide = async (id: string, verb: 'confirm' | 'reject') => {
+  const actionPath = (id: string, verb: string) =>
+    `/api/v1/actions/${encodeURIComponent(id)}/${verb}`
+  const decide = async (id: string, verb: string, init?: RequestInit) => {
     try {
-      return fromApiAction(
-        await json<ApiAction>(`/api/v1/actions/${encodeURIComponent(id)}/${verb}`, {
-          method: 'POST',
-        }),
-      )
+      return fromApiAction(await json<ApiAction>(actionPath(id, verb), init ?? { method: 'POST' }))
     } catch (error) {
       throw toActionProblem(error)
     }
@@ -283,7 +287,15 @@ export function createHttpProductApi(getToken: TokenGetter): ProductApi {
         signal,
       ),
     // F06: confirmar executa no Jira exatamente o que o cartão mostra; recusar não envia nada.
-    confirmAction: (id: string) => decide(id, 'confirm'),
+    confirmAction: (id: string, payloadHash?: string) =>
+      decide(id, 'confirm', payloadHash ? send('POST', { payload_hash: payloadHash }) : undefined),
     rejectAction: (id: string) => decide(id, 'reject'),
+    previewAction: async (id, spec, priority) =>
+      fromPreview(
+        await json<ApiProposalPreview>(actionPath(id, 'preview'), send('POST', { spec, priority })),
+      ),
+    saveAction: (id, spec, priority, baseHash) =>
+      decide(id, 'spec', send('PUT', { spec, priority, base_hash: baseHash })),
+    restoreAction: (id, baseHash) => decide(id, 'restore', send('POST', { base_hash: baseHash })),
   }
 }

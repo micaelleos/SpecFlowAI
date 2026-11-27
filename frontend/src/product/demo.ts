@@ -10,10 +10,68 @@ import type {
   ProductApi,
   ProposedAction,
   IssueReadiness,
+  EditableSpec,
+  SpecSection,
 } from './types'
 
 const JIRA = 'https://jira.example.com'
 const HOUR = 3_600_000
+
+const DEMO_SPEC: EditableSpec = {
+  type: 'story',
+  title: 'Pay for the order with Pix',
+  objective: 'Como cliente, quero pagar meu pedido com Pix, para concluir a compra sem cartão.',
+  context: [],
+  acceptance_criteria: [
+    {
+      id: 'CA-01',
+      kind: 'principal',
+      title: 'Gerar cobrança Pix',
+      given: ['estou no checkout com um pedido de R$ 120,00'],
+      when: ['escolho "Pix"'],
+      then: ['vejo o QR Code e o texto "Pague em até 30 minutos"'],
+    },
+  ],
+  out_of_scope: ['Estorno de Pix.', 'Pix parcelado.'],
+  constraints: [],
+  where_to_change: [],
+  how_to_verify: ['Testes de unidade da cobrança.', 'E2E do CA-01.'],
+  open_questions: [],
+  human_only: false,
+  human_only_reason: '',
+}
+
+const bullets = (items: string[] | undefined) => (items ?? []).map((i) => `- ${i}`).join('\n')
+
+/** Prévia aproximada da spec (a real vem da API, F14-RT-03): só para a demonstração. */
+function demoSections(spec: EditableSpec): SpecSection[] {
+  const out: SpecSection[] = []
+  const add = (title: string, markdown: string) => markdown && out.push({ title, markdown })
+  add('Objetivo', spec.objective ?? '')
+  if (spec.type === 'epic') {
+    add('Problema', spec.problem ?? '')
+    add('Escopo', bullets(spec.scope))
+    add('Critérios de aceite', bullets(spec.acceptance_criteria))
+  } else {
+    add('Contexto', bullets(spec.context))
+    add(
+      'Critérios de aceite',
+      (spec.acceptance_criteria ?? [])
+        .map((c) =>
+          [
+            `**${c.id} (${c.kind}) ${c.title}**`,
+            ...c.given.map((g, i) => `${i ? 'E' : 'Dado'} ${g}`),
+            ...c.when.map((w, i) => `${i ? 'E' : 'Quando'} ${w}`),
+            ...c.then.map((t, i) => `${i ? 'E' : 'Então'} ${t}`),
+          ].join('\n'),
+        )
+        .join('\n\n'),
+    )
+    add('Como verificar', bullets(spec.how_to_verify))
+  }
+  add('Fora de escopo', bullets(spec.out_of_scope))
+  return out
+}
 
 /**
  * Dados de demonstração em memória (F08-RT-08): só em `npm run dev` com `VITE_DEMO_DATA=true` e
@@ -93,7 +151,12 @@ export function createDemoProductApi(now: () => number = Date.now): ProductApi {
     errorCode: null,
     doc: null,
     warning: null,
+    spec: DEMO_SPEC,
+    version: 1,
+    editedBy: 'agent',
+    payloadHash: 'demo-1',
   }
+  const agentVersion = { ...action }
 
   const messages: Record<string, ChatMessage[]> = {
     c1: [
@@ -377,6 +440,34 @@ export function createDemoProductApi(now: () => number = Date.now): ProductApi {
     rejectAction: async (id) => {
       const a = findAction(id)
       if (a.status === 'pending') a.status = 'rejected'
+      return { ...a }
+    },
+    previewAction: async (_id, spec) => ({
+      title: spec.title,
+      sections: demoSections(spec),
+      readiness: { ready: Boolean(spec.objective), rules: [] },
+      labels: spec.objective ? ['agent-ready', 'specflow'] : ['specflow'],
+    }),
+    saveAction: async (id, spec, priority) => {
+      const a = findAction(id)
+      Object.assign(a, {
+        spec,
+        title: spec.title,
+        priority: priority ?? a.priority,
+        sections: demoSections(spec),
+        version: a.version + 1,
+        editedBy: 'user',
+        payloadHash: `demo-${a.version + 1}`,
+      })
+      return { ...a }
+    },
+    restoreAction: async (id) => {
+      const a = findAction(id)
+      Object.assign(a, {
+        ...agentVersion,
+        version: a.version + 1,
+        payloadHash: `demo-${a.version + 1}`,
+      })
       return { ...a }
     },
     getUsage: async () => ({
