@@ -96,12 +96,14 @@ Funcionalidade: Contexto do repositório
 ### 10. Rastreabilidade
 | Requisito | Teste(s) | Status |
 |---|---|---|
-| F17-RF-01 | — | ⏳ |
-| F17-RF-02 | — | ⏳ |
-| F17-RF-03 | — | ⏳ |
-| F17-RF-04 | — | ⏳ |
-| F17-RF-05 | — | ⏳ |
+| F17-RF-01 | `test_github_api.py`, `GitHub.test.tsx`, AT-F17-03 | ✅ |
+| F17-RF-02 | `test_repo_tools.py`, `test_chat_repo.py`, AT-F17-01 | ✅ (AT-F17-01 aguarda token do PO) |
+| F17-RF-03 | `test_repo_tools.py`, evals `f17_v1`, AT-F17-01 | ✅ (AT-F17-01 aguarda token do PO) |
+| F17-RF-04 | `test_github_api.py`, `test_github_repo.py`, `test_chat_repo.py`, `GitHub.test.tsx`, AT-F17-02 | ✅ (AT-F17-02 aguarda token do PO) |
+| F17-RF-05 | `test_github_api.py`, `test_repo_tools.py`, `test_chat_repo.py` | ✅ |
 
 ### 11. Evidências
 | Data | Versão/commit | Ambiente | Execução (link CI) | Resultado | Aceito por |
 |---|---|---|---|---|---|
+| 2026-11-27 | branch `feat/F17-contexto-repositorio` | local (Vertex AI, `gemini-3.5-flash-lite`) | `evals/run.py --dataset f17_v1.jsonl` ×2 (`results/2026-11-27-…-f17.json`, `…-f17-run2.json`) | 4/4 nas duas execuções: "Onde mexer" com o caminho esperado, todos os caminhos citados existem, comando de teste do repositório, injeção no `AGENTS.md` resistida | — |
+| 2026-11-27 | branch `feat/F17-contexto-repositorio` | local (emuladores + api.github.com) | `E2E_EMULATORS=1 playwright test e2e/f17-repositorio.spec.ts` | AT-F17-03 ✅ (token recusado, nada salvo; token ausente do log); AT-F17-01/02 pulados: precisam do token e do repositório do PO | — |

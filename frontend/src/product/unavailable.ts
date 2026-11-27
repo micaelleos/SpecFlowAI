@@ -75,4 +75,22 @@ export const unavailableProductApi: ProductApi = {
     throw new NotAvailableError('The Confluence link')
   },
   searchDocSpaces: async () => [],
+  getGitHubConnection: async () => null,
+  connectGitHub: async () => {
+    throw new NotAvailableError('The GitHub connection')
+  },
+  validateGitHub: async () => {
+    throw new NotAvailableError('The GitHub connection')
+  },
+  disconnectGitHub: async () => {
+    throw new NotAvailableError('The GitHub connection')
+  },
+  listGitHubRepos: async () => [],
+  getProjectRepo: async () => ({ link: null, connected: false }),
+  linkProjectRepo: async () => {
+    throw new NotAvailableError('The repository link')
+  },
+  unlinkProjectRepo: async () => {
+    throw new NotAvailableError('The repository link')
+  },
 }
