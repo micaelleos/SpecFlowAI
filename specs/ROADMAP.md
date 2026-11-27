@@ -27,7 +27,7 @@
 | F15 | Suíte contínua de avaliação do agente (evals, incluindo prontidão e implementabilidade) | 4 (baseline na 1) | Rascunho · plano após GA | F05 | 6 d | 4 / — | [spec](015-evals-agente/spec.md) · [plano](015-evals-agente/plan.md) |
 | F16 | Google Analytics (consentimento LGPD, CSP, eventos) | 4 | A especificar (aprovado pelo PO em 2026-11-14) | F02, F08 | — | — | — |
 | F17 | Contexto do repositório (GitHub, só leitura) para "Onde mexer" | 4 | Em implementação | F05, F12 | 5 d | 4 / 3 | [spec](017-contexto-repositorio/spec.md) |
-| F18 | Exportar specs para o repositório (formato Spec Kit, por PR) | 4 | Rascunho · plano após GA | F06, F17 | 4 d | 4 / 2 | [spec](018-exportar-specs-repositorio/spec.md) |
+| F18 | Exportar specs para o repositório (formato Spec Kit, por PR) | 4 | Em implementação | F06, F10, F17 | 4 d | 5 / 4 | [spec](018-exportar-specs-repositorio/spec.md) · [plano](018-exportar-specs-repositorio/plan.md) · [tarefas](018-exportar-specs-repositorio/tasks.md) |
 | F19 | Contexto do Confluence e metodologia em fases no agente (leitura) | 4 | Em produção | F04, F05, F06, F09, F12 | 6 d | 9 / 12 | [spec](019-contexto-confluence/spec.md) · [plano](019-contexto-confluence/plan.md) · [tarefas](019-contexto-confluence/tasks.md) |
 | F20 | Documentação do projeto no Confluence (escrita por ação proposta) | 4 | Em produção | F19, F06, F10 | 6 d | 8 / 8 | [spec](020-documentacao-confluence/spec.md) · [plano](020-documentacao-confluence/plan.md) · [tarefas](020-documentacao-confluence/tasks.md) |
 | F21 | O agente fixa o projeto da conversa (e pin manual na tela) | 4 | Em validação | F07, F19, F20 | 2,5 d | 5 / 5 | [spec](021-agente-fixa-projeto/spec.md) · [plano](021-agente-fixa-projeto/plan.md) · [tarefas](021-agente-fixa-projeto/tasks.md) |
