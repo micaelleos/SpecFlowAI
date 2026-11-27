@@ -56,18 +56,6 @@ export function ChatPage() {
         list?.map((c) => (c.id === updated.id ? updated : c)),
       ),
   })
-  // F21-RF-05: sem projeto, o topo do chat oferece fixar um (o agente também fixa, F21-RF-01).
-  const connection = useQuery({
-    queryKey: ['jira-connection'],
-    queryFn: product.getJiraConnection,
-    enabled: !projectKey,
-  })
-  const projects = useQuery({
-    queryKey: ['jira-projects'],
-    queryFn: () => product.listProjects(),
-    enabled: !projectKey && product.features.projects && connection.data?.status === 'ok',
-    retry: false,
-  })
   const choose = (key: string) => {
     if (!key) return
     if (conversationId) pin.mutate({ id: conversationId, key })
@@ -132,24 +120,7 @@ export function ChatPage() {
               )}
             </span>
           )}
-          {!projectKey && (projects.data?.length ?? 0) > 0 && (
-            <label className="flex items-center gap-2 text-sm text-zinc-700">
-              {t.chat.pinLabel}
-              <select
-                value=""
-                disabled={pin.isPending}
-                onChange={(e) => choose(e.target.value)}
-                className="min-h-9 rounded-md border border-zinc-300 bg-white px-2 text-sm"
-              >
-                <option value="">{t.chat.pinChoose}</option>
-                {projects.data?.map((p) => (
-                  <option key={p.key} value={p.key}>
-                    {p.key} · {p.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+          {!projectKey && <PinProjectSelect disabled={pin.isPending} onChoose={choose} />}
         </header>
 
         {/* F08: as mensagens rolam dentro deste contêiner (lg+); o campo fica sempre embaixo. `relative`
@@ -242,6 +213,44 @@ export function ChatPage() {
         </form>
       </main>
     </div>
+  )
+}
+
+/** F21-RF-05: fixar um projeto à mão numa conversa sem projeto. Componente à parte para as consultas
+ * da conexão e dos projetos não renderizarem a página do chat inteira. */
+function PinProjectSelect({
+  disabled,
+  onChoose,
+}: {
+  disabled: boolean
+  onChoose: (key: string) => void
+}) {
+  const product = useProduct()
+  const connection = useQuery({ queryKey: ['jira-connection'], queryFn: product.getJiraConnection })
+  const projects = useQuery({
+    queryKey: ['jira-projects'],
+    queryFn: () => product.listProjects(),
+    enabled: product.features.projects && connection.data?.status === 'ok',
+    retry: false,
+  })
+  if (!projects.data?.length) return null
+  return (
+    <label className="flex items-center gap-2 text-sm text-zinc-700">
+      {t.chat.pinLabel}
+      <select
+        value=""
+        disabled={disabled}
+        onChange={(e) => onChoose(e.target.value)}
+        className="min-h-9 rounded-md border border-zinc-300 bg-white px-2 text-sm"
+      >
+        <option value="">{t.chat.pinChoose}</option>
+        {projects.data.map((p) => (
+          <option key={p.key} value={p.key}>
+            {p.key} · {p.name}
+          </option>
+        ))}
+      </select>
+    </label>
   )
 }
 
