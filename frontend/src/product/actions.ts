@@ -1,7 +1,9 @@
 import { ApiError } from '../lib/api'
 import type { components } from '../lib/api-schema'
 import {
+  type ActionPreview,
   DOC_KINDS,
+  type EditableSpec,
   type DocConflict,
   type DocProposal,
   type FieldChange,
@@ -148,6 +150,23 @@ export function fromApiAction(action: ApiAction): ProposedAction {
     errorCode: action.error?.code ?? null,
     doc: docs,
     warning: result && 'warning' in result ? (result.warning ?? null) : null,
+    spec: (action.spec as EditableSpec | null | undefined) ?? null,
+    version: action.version ?? 1,
+    editedBy: action.edited_by ?? 'agent',
+    payloadHash: action.payload_hash ?? '',
+  }
+}
+
+export type ApiProposalPreview = components['schemas']['ProposalPreview']
+
+/** Prévia da edição (F14-RT-03) no formato do cartão. */
+export function fromPreview(raw: ApiProposalPreview): ActionPreview {
+  const preview = raw.preview
+  return {
+    title: str(preview.summary) ?? '',
+    sections: sections(preview),
+    readiness: readiness(raw.readiness),
+    labels: raw.labels,
   }
 }
 
@@ -195,5 +214,9 @@ export function fromProposedEvent(
     labels: strings(preview.labels),
     created_at: now.toISOString(),
     expires_at: new Date(now.getTime() + 24 * 3_600_000).toISOString(),
+    // A spec e o hash chegam quando o histórico é relido; até lá o cartão não edita.
+    payload_hash: '',
+    version: 1,
+    edited_by: 'agent',
   })
 }

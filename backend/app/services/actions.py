@@ -30,6 +30,7 @@ from app.agent.spec.jira_payload import (
     payload_hash,
     resolve_issue_type,
 )
+from app.agent.spec.proposal import EDITABLE_KINDS
 from app.core.config import Settings
 from app.core.errors import ApiProblemError
 from app.core.logging import uid_hash
@@ -158,6 +159,12 @@ class ActionOut(BaseModel):
     expires_at: datetime
     result: ActionResult | DocResult | None = None
     error: ActionError | None = None
+    # Edição antes da confirmação (F14): o hash da versão exibida volta na confirmação.
+    payload_hash: str = ""
+    version: int = 1
+    edited_by: Literal["agent", "user"] = "agent"
+    # A spec (`AgentReadySpec`) das propostas editáveis; `None` nas demais.
+    spec: dict[str, Any] | None = None
 
 
 # ------------------------------------------------------------------------------ erros da API
@@ -188,6 +195,20 @@ class ActionNotPendingError(ApiProblemError):
             "action-not-pending",
             "Ação já tratada",
             f"Esta ação já está {_STATUS_TEXT[action.status]}.",
+            action=action.model_dump(mode="json"),
+        )
+
+
+class ActionChangedError(ApiProblemError):
+    """409: a proposta ganhou outra versão depois de exibida (F14-RT-01); `action` traz a atual."""
+
+    def __init__(self, action: ActionOut) -> None:
+        super().__init__(
+            409,
+            "action-changed",
+            "A proposta mudou",
+            "A proposta foi editada depois que você a abriu. Revise a versão atual antes de "
+            "confirmar.",
             action=action.model_dump(mode="json"),
         )
 
@@ -346,6 +367,10 @@ def to_out(doc: dict[str, Any], now: datetime) -> ActionOut:
         expires_at=doc["expiresAt"],
         result=_result(doc),
         error=ActionError(**doc["error"]) if doc.get("error") else None,
+        payload_hash=str(doc.get("payloadHash") or ""),
+        version=int(doc.get("version") or 1),
+        edited_by="user" if doc.get("editedBy") == "user" else "agent",
+        spec=(doc.get("payload") or {}).get("spec") if doc["kind"] in EDITABLE_KINDS else None,
     )
 
 
@@ -363,12 +388,14 @@ def describe(doc: dict[str, Any]) -> str:
         return describe_doc(doc)
     preview = doc.get("preview") or {}
     payload = doc.get("payload") or {}
+    edited = " (editada pelo usuário)" if doc.get("editedBy") == "user" else ""
     if doc["kind"] == "create_issue":
         return (
             f'criar {payload.get("issue_type", "issue")} "{preview.get("summary", "")}" '
-            f"em {payload.get('project_key')}"
+            f"em {payload.get('project_key')}{edited}"
         )
-    return f"atualizar {payload.get('issue_key')}"
+    title = f' ("{preview["summary"]}")' if payload.get("spec") and preview.get("summary") else ""
+    return f"atualizar {payload.get('issue_key')}{title}{edited}"
 
 
 class ActionService:
@@ -418,7 +445,14 @@ class ActionService:
         self._audit(uid, doc, "rejected")
         return out
 
-    async def confirm(self, uid: str, action_id: str, confirmed_by: str | None = None) -> ActionOut:
+    async def confirm(
+        self,
+        uid: str,
+        action_id: str,
+        confirmed_by: str | None = None,
+        payload_hash: str | None = None,
+    ) -> ActionOut:
+        """`payload_hash`: o hash da versão que a tela mostra; outro, 409 (F14-RT-01)."""
         if not self._settings.actions_enabled:
             raise ActionsDisabledError()
         current = await self._run(self._store.get_action, uid, action_id)
@@ -426,12 +460,17 @@ class ActionService:
             raise DocsWritesDisabledError()
         now = self._clock()
         claim = uuid.uuid4().hex
+        changed = [False]
 
         def decide(doc: dict[str, Any] | None) -> dict[str, Any] | None:
+            changed[0] = False
             if doc is None:
                 return None
             if _expired(doc, now):
                 return {"status": "expired"}
+            if doc["status"] == "pending" and payload_hash not in (None, doc.get("payloadHash")):
+                changed[0] = True
+                return None
             if doc["status"] == "pending":
                 return {"status": "executing", "claim": claim, "executingAt": now}
             if doc["status"] == "executing" and _aware(doc["executingAt"]) + STALE_EXECUTION < now:
@@ -445,6 +484,8 @@ class ActionService:
             raise ActionNotFoundError()
         if doc["status"] == "expired":
             raise ActionExpiredError(to_out(doc, now))
+        if changed[0]:
+            raise ActionChangedError(to_out(doc, now))
         if doc.get("claim") != claim or doc["status"] != "executing":
             raise ActionNotPendingError(to_out(doc, now))
         if doc["kind"] in DOC_KINDS:

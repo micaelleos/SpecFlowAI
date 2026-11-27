@@ -1,3 +1,4 @@
+import type { components } from '../lib/api-schema'
 import type { ChatEvent } from '../lib/sse'
 
 /**
@@ -207,6 +208,20 @@ export type ActionKind =
 export const DOC_KINDS: readonly ActionKind[] = ['create_page', 'update_page', 'create_space']
 
 /** Ação proposta pelo agente; só vira escrita no Jira/Confluence depois de confirmada (ADR-003). */
+/** A spec da proposta (`AgentReadySpec`, F14): história/tarefa ou épico, como a API valida. */
+export type WorkItemSpec = components['schemas']['WorkItemSpec']
+export type EpicSpec = components['schemas']['EpicSpec']
+export type EditableSpec = WorkItemSpec | EpicSpec
+export type Scenario = components['schemas']['Scenario']
+
+/** O cartão como ficaria com a edição, sem gravar (F14-RT-03). */
+export interface ActionPreview {
+  title: string
+  sections: SpecSection[]
+  readiness: Readiness | null
+  labels: string[]
+}
+
 export interface ProposedAction {
   id: string
   kind: ActionKind
@@ -238,6 +253,12 @@ export interface ProposedAction {
   doc: DocProposal | null
   /** Aviso da execução (ex.: o Registro de mudanças não foi atualizado). */
   warning: string | null
+  /** F14: a spec editável (`null` quando a proposta não tem spec) e a versão exibida. */
+  spec: EditableSpec | null
+  version: number
+  editedBy: 'agent' | 'user'
+  /** Hash da versão exibida: a confirmação e a edição o mandam de volta (F14-RT-01). */
+  payloadHash: string
 }
 
 /** Mensagem do histórico (F07): o texto em Markdown e os cartões das ações propostas nela. */
@@ -298,8 +319,22 @@ export interface ProductApi {
     onEvent: (event: ChatEvent) => void,
     signal?: AbortSignal,
   ): Promise<{ conversationId: string }>
-  confirmAction(actionId: string): Promise<ProposedAction>
+  /** `payloadHash`: a versão que a tela mostra; se a proposta mudou, 409 `action-changed`. */
+  confirmAction(actionId: string, payloadHash?: string): Promise<ProposedAction>
   rejectAction(actionId: string): Promise<ProposedAction>
+  /** Edição antes de confirmar (F14). */
+  previewAction(
+    actionId: string,
+    spec: EditableSpec,
+    priority: string | null,
+  ): Promise<ActionPreview>
+  saveAction(
+    actionId: string,
+    spec: EditableSpec,
+    priority: string | null,
+    baseHash: string,
+  ): Promise<ProposedAction>
+  restoreAction(actionId: string, baseHash: string): Promise<ProposedAction>
   getUsage(): Promise<Usage | null>
   getProjectDocs(projectKey: string): Promise<ProjectDocs>
   linkProjectDocs(projectKey: string, spaceKey: string): Promise<ProjectDocs>

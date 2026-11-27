@@ -107,6 +107,12 @@ uv run --project backend pytest -q scripts --rootdir scripts -p no:cacheprovider
   empty (transaction). After the pin, `ChatService._stream` stops that graph pass and continues the same turn with the
   project's instruction and toolset (Confluence included). The agent never changes or clears the project; the user
   can via the chat header (× or the "Pin a project" selector). Evals: `evals/datasets/f21_v1.jsonl` (`pin: true`).
+- **Editing proposals (F14):** a pending `create_issue`/`update_issue` with a spec is edited on its card by
+  `AgentReadySpec` section. `agent/spec/proposal.py` (`revise`) rebuilds payload, hash, preview, readiness and labels with
+  the same functions as the agent tools. `ActionEditService` (`/api/v1/actions/{id}/preview|spec|restore`) saves a new
+  version in a transaction only if `base_hash` is the current hash, and the first user edit keeps `agentVersion` for
+  "Restore". `confirm` takes the shown `payload_hash` (409 `action-changed`). "Refine with AI" sends a chat message, and the
+  agent uses `ler_proposta`/`revisar_proposta`, which revise the same action, never a new card. Evals: `evals/datasets/f14_v1.jsonl`.
 - Target design (agent graph, tools, SSE event schema, Firestore model, API v1) is in
   `docs/modernizacao/03-arquitetura.md`; decisions in `docs/modernizacao/adr/`.
 

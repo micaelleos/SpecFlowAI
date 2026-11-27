@@ -57,6 +57,15 @@ export const unavailableProductApi: ProductApi = {
   rejectAction: async () => {
     throw new NotAvailableError('Action confirmation')
   },
+  previewAction: async () => {
+    throw new NotAvailableError('Editing proposals')
+  },
+  saveAction: async () => {
+    throw new NotAvailableError('Editing proposals')
+  },
+  restoreAction: async () => {
+    throw new NotAvailableError('Editing proposals')
+  },
   getUsage: async () => null,
   getProjectDocs: async () => ({ link: null, suggestion: null, available: false }),
   linkProjectDocs: async () => {

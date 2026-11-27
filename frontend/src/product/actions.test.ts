@@ -30,6 +30,9 @@ const update: ApiAction = {
   labels: ['specflow', 'time-a'],
   created_at: '2026-11-16T12:00:00Z',
   expires_at: '2026-11-17T12:00:00Z',
+  payload_hash: 'h1',
+  version: 1,
+  edited_by: 'agent',
 }
 
 describe('F06-RF-06 mapeamento da ação da API', () => {
