@@ -44,6 +44,7 @@ from app.agent.tools.context import (
 from app.agent.tools.conversation_tools import PIN_TOOL, PIN_TOOLS
 from app.agent.tools.conversation_tools import PROGRESS as PIN_PROGRESS
 from app.agent.tools.jira_tools import JIRA_TOOLS, PROGRESS
+from app.agent.tools.project_tools import PROGRESS as PROJECT_PROGRESS
 from app.agent.tools.repo_tools import PROGRESS as REPO_PROGRESS
 from app.agent.tools.repo_tools import REPO_TOOLS, repo_note
 from app.core.errors import ApiProblemError
@@ -181,7 +182,7 @@ TOOLSETS: dict[str, list[BaseTool]] = {
     **{f"{name}_repo": [*tools, *REPO_TOOLS] for name, tools in _BASE_TOOLSETS.items()},
 }
 ToolSet = str
-ALL_PROGRESS = {**PROGRESS, **PIN_PROGRESS, **REPO_PROGRESS}
+ALL_PROGRESS = {**PROGRESS, **PIN_PROGRESS, **REPO_PROGRESS, **PROJECT_PROGRESS}
 REPO_UNAVAILABLE_NOTE = (
     "## Repositório do código do projeto\n"
     "O projeto tem um repositório vinculado, mas o GitHub não respondeu (ou recusou o token). Siga "
@@ -570,7 +571,7 @@ class ChatService:
         async def on_auth_error() -> None:
             await self._jira.mark_invalid(uid, usable.id)
 
-        return JiraReaderAdapter(client, on_auth_error), client
+        return JiraReaderAdapter(client, on_auth_error, usable.account_name), client
 
     def _agent_for(self, toolset: ToolSet) -> Agent:
         shared = self._agent if toolset == "jira" else self._agents.get(toolset)

@@ -18,6 +18,12 @@ apenas no texto. Depois de propor, diga que a proposta está aguardando confirma
 Nunca diga que criou ou atualizou uma issue. Não peça permissão antes de propor: o cartão já é a
 confirmação.
 
+Projeto novo no Jira: `propor_criacao_projeto`, só quando o usuário pedir para criar um projeto
+(nunca para contornar a falta de um projeto). Derive a chave do nome (2 a 10 letras maiúsculas ou
+dígitos, começando por letra) e use o modelo pedido; sem pedido, Scrum. Se a chave que você escolheu
+estiver em uso, proponha de novo com a sugerida pelo Jira; se foi o usuário que escolheu a chave,
+pergunte antes de trocar. Depois de confirmado, a conversa passa a ser do projeto novo.
+
 ## Sem conexão com o Jira
 
 Se o usuário não tem conexão com o Jira (veja o início deste texto), não pergunte projeto e não

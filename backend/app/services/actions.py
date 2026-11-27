@@ -83,6 +83,14 @@ class ActionStore(Protocol):
         self, uid: str, action_id: str, change: dict[str, Any], documents: dict[str, dict[str, Any]]
     ) -> None: ...
     def add_system_message(self, uid: str, conversation_id: str, data: dict[str, Any]) -> str: ...
+    # F22-RF-03 (regra da F21): fixa o projeto só se a conversa ainda não tem um.
+    def pin_project(self, uid: str, conversation_id: str, project_key: str) -> str | None: ...
+
+
+class ProjectsCache(Protocol):
+    """Cache da lista de projetos (F09), descartado depois de criar um projeto (F22-RT-04)."""
+
+    def clear_projects(self, uid: str) -> None: ...
 
 
 class ActionResult(BaseModel):
@@ -149,7 +157,14 @@ class ActionOut(BaseModel):
     """O cartão inteiro: o que vai ao Jira (`preview`), a prontidão e o estado (F06-RF-01)."""
 
     id: str
-    kind: Literal["create_issue", "update_issue", "create_page", "update_page", "create_space"]
+    kind: Literal[
+        "create_issue",
+        "update_issue",
+        "create_page",
+        "update_page",
+        "create_space",
+        "create_project",
+    ]
     status: ActionStatus
     conversation_id: str
     preview: dict[str, Any]
@@ -263,6 +278,34 @@ class Failure(BaseModel):
     code: str
     message: str
     retryable: bool  # o Jira certamente não gravou: a ação volta a `pending`
+
+
+def translate_project(payload: dict[str, Any], exc: JiraError) -> Failure:
+    """Erro do Jira ao criar projeto (F22-RF-04, F22-RT-03) → mensagem em pt-BR."""
+    key = payload.get("key")
+    if isinstance(exc, JiraForbiddenError) or (
+        isinstance(exc, JiraBadRequestError) and "permission" in str(exc).lower()
+    ):
+        return Failure(
+            code="jira-project-forbidden",
+            message="Sua conta não pode criar projetos neste Jira: é preciso ser administrador do "
+            "Jira. Peça a um administrador ou crie o projeto por lá.",
+            retryable=False,
+        )
+    if isinstance(exc, JiraBadRequestError):
+        return Failure(
+            code="jira-project-invalid",
+            message=f"O Jira recusou criar o projeto {key}: {exc}",
+            retryable=False,
+        )
+    if isinstance(exc, JiraUncertainError):
+        return Failure(
+            code="jira-uncertain",
+            message=f"O Jira não respondeu a tempo. Confira no Jira se o projeto {key} foi criado "
+            "antes de pedir de novo.",
+            retryable=False,
+        )
+    return translate("create_project", payload, exc)
 
 
 def translate(kind: str, payload: dict[str, Any], exc: JiraError) -> Failure:
@@ -389,6 +432,8 @@ def describe(doc: dict[str, Any]) -> str:
     preview = doc.get("preview") or {}
     payload = doc.get("payload") or {}
     edited = " (editada pelo usuário)" if doc.get("editedBy") == "user" else ""
+    if doc["kind"] == "create_project":
+        return f'criar o projeto {payload.get("key")} ("{payload.get("name")}")'
     if doc["kind"] == "create_issue":
         return (
             f'criar {payload.get("issue_type", "issue")} "{preview.get("summary", "")}" '
@@ -406,8 +451,10 @@ class ActionService:
         settings: Settings,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
         docs: ConfluenceActionExecutor | None = None,
+        projects_cache: ProjectsCache | None = None,
     ) -> None:
         self._store = store
+        self._projects_cache = projects_cache
         self._jira = jira
         self._settings = settings
         self._clock = clock
@@ -571,6 +618,8 @@ class ActionService:
                 retryable=False,
             )
             await self._fail(uid, doc, failure, now)
+        if doc["kind"] == "create_project":
+            return await self._execute_project(uid, doc, client, now)
         try:
             result = await self._write(client, doc["kind"], payload)
         except _IssueTypeMissingError as exc:
@@ -584,6 +633,36 @@ class ActionService:
         finally:
             await client.aclose()
         return await self._done(uid, doc, result, now)
+
+    async def _execute_project(
+        self, uid: str, doc: dict[str, Any], client: JiraClient, now: datetime
+    ) -> ActionOut:
+        """F22: `POST /rest/api/3/project` com o payload confirmado; o responsável é a conta da
+        conexão da proposta (a mesma, conferida em `_client`)."""
+        payload: dict[str, Any] = doc["payload"]
+        try:
+            account = await client.myself()
+            created = await client.create_project({**payload, "leadAccountId": account.account_id})
+        except JiraError as exc:
+            failure = translate_project(payload, exc)
+            if isinstance(exc, JiraAuthError) and doc.get("connectionId"):
+                await self._jira.mark_invalid(uid, doc["connectionId"])
+            await self._fail(uid, doc, failure, now)
+        finally:
+            await client.aclose()
+        result = ActionResult(issue_key=created.key, url=created.url)
+        change = {"status": "done", "result": result.model_dump(), "executedAt": self._clock()}
+        await self._run(self._store.update_action, uid, doc["id"], change)
+        doc = {**doc, **change}
+        pinned = await self._run(self._store.pin_project, uid, doc["conversationId"], created.key)
+        if self._projects_cache is not None:
+            await self._run(self._projects_cache.clear_projects, uid)
+        text = f"O usuário confirmou e o SpecFlow criou o projeto {created.key} ({created.url})."
+        if pinned == created.key:
+            text += f" A conversa agora é do projeto {created.key}."
+        await self._system_message(uid, doc, text)
+        self._audit(uid, doc, "done", issue_key=created.key)
+        return to_out(doc, now)
 
     async def _client(self, uid: str, doc: dict[str, Any]) -> JiraClient:
         connections = {c.id: c for c in await self._jira.list(uid)}

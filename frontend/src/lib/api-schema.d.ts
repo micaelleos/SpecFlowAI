@@ -570,7 +570,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "create_issue" | "update_issue" | "create_page" | "update_page" | "create_space";
+            kind: "create_issue" | "update_issue" | "create_page" | "update_page" | "create_space" | "create_project";
             /** Labels */
             labels: string[];
             /**

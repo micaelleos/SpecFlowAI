@@ -36,7 +36,14 @@ class ToolEndEvent(_Event):
 class ActionProposedEvent(_Event):
     event: Literal["action_proposed"] = "action_proposed"
     action_id: str
-    kind: Literal["create_issue", "update_issue", "create_page", "update_page", "create_space"]
+    kind: Literal[
+        "create_issue",
+        "update_issue",
+        "create_page",
+        "update_page",
+        "create_space",
+        "create_project",
+    ]
     preview: dict[str, Any] = Field(
         description=(
             "Jira: project_key, project_name ou issue_key/url, issue_type, summary, priority, "

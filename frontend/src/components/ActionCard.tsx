@@ -47,6 +47,9 @@ export function ActionCard({
       queryClient.invalidateQueries({ queryKey: ['messages', conversationId] }),
       queryClient.invalidateQueries({ queryKey: ['issues'] }),
       queryClient.invalidateQueries({ queryKey: ['documents'] }),
+      // F22: o projeto criado aparece em Projects e fica fixado na conversa sem projeto.
+      queryClient.invalidateQueries({ queryKey: ['jira-projects'] }),
+      queryClient.invalidateQueries({ queryKey: ['conversations'] }),
     ])
   const latest = newest(initial, edited)
   const confirm = useMutation({
@@ -103,24 +106,35 @@ export function ActionCard({
     )
   }
   const creating = action.kind === 'create_issue'
+  const project = action.project ?? null
   const a = t.chat.action
   const e = t.chat.edit
-  const heading = creating
-    ? a.titleCreate(action.issueType ?? 'issue', action.projectKey ?? '')
-    : a.titleUpdate(action.issueKey ?? '')
+  const heading = project
+    ? a.titleProject(project.key)
+    : creating
+      ? a.titleCreate(action.issueType ?? 'issue', action.projectKey ?? '')
+      : a.titleUpdate(action.issueKey ?? '')
   const editable = status === 'pending' && action.spec !== null && action.payloadHash !== ''
   const editing = editable && draft !== null
 
-  const fields: [string, string, string?][] = creating
+  const fields: [string, string, string?][] = project
     ? [
-        [a.project, [action.projectKey, action.projectName].filter(Boolean).join(' · ')],
-        [a.type, action.issueType ?? '—'],
-        [a.priority, action.priority ?? a.projectDefault],
-        [a.issueTitle, action.title, 'sm:col-span-2'],
-        [a.parent, action.parentKey ?? '—'],
-        [a.labels, action.labels.join(', ') || '—', 'sm:col-span-3'],
+        [a.projectName, project.name],
+        [a.projectKey, project.key],
+        [a.template, project.templateLabel],
+        [a.lead, a.leadYou(project.lead)],
+        [a.description, project.description || '—', 'sm:col-span-2'],
       ]
-    : [[a.issue, action.issueKey ?? '—']]
+    : creating
+      ? [
+          [a.project, [action.projectKey, action.projectName].filter(Boolean).join(' · ')],
+          [a.type, action.issueType ?? '—'],
+          [a.priority, action.priority ?? a.projectDefault],
+          [a.issueTitle, action.title, 'sm:col-span-2'],
+          [a.parent, action.parentKey ?? '—'],
+          [a.labels, action.labels.join(', ') || '—', 'sm:col-span-3'],
+        ]
+      : [[a.issue, action.issueKey ?? '—']]
 
   return (
     <section
@@ -199,7 +213,7 @@ export function ActionCard({
         {status === 'pending' && !editing && (
           <div className="flex flex-wrap gap-2">
             <Button type="button" disabled={busy} onClick={() => confirm.mutate(action)}>
-              {creating ? a.confirm : a.confirmUpdate}
+              {project ? a.confirmProject : creating ? a.confirm : a.confirmUpdate}
             </Button>
             {editable && action.spec && (
               <Button
@@ -242,7 +256,11 @@ export function ActionCard({
         )}
         {status === 'done' && action.resultKey && (
           <p role="status" className="text-sm text-green-800">
-            {creating ? a.created(action.resultKey) : a.updated(action.resultKey)}
+            {project
+              ? a.createdProject(action.resultKey)
+              : creating
+                ? a.created(action.resultKey)
+                : a.updated(action.resultKey)}
             {action.resultUrl && (
               <>
                 {' · '}

@@ -98,12 +98,14 @@ Funcionalidade: Criar projeto no Jira pelo agente
 ### 10. Rastreabilidade
 | Requisito | Teste(s) | Status |
 |---|---|---|
-| F22-RF-01 | — | ⏳ |
-| F22-RF-02 | — | ⏳ |
-| F22-RF-03 | — | ⏳ |
-| F22-RF-04 | — | ⏳ |
-| F22-RF-05 | — | ⏳ |
+| F22-RF-01 | `test_project_tools.py`, `test_project_actions.py`, `ActionCard.test.tsx`, evals `f22_v1`, AT-F22-01/03 | ✅ (AT-F22-01 aguarda autorização de escrita) |
+| F22-RF-02 | `test_jira_project_create.py`, `test_project_tools.py`, evals `f22_v1`, AT-F22-02 | ✅ |
+| F22-RF-03 | `test_project_actions.py`, `ActionCard.test.tsx`, AT-F22-01 | ✅ (AT-F22-01 aguarda autorização de escrita) |
+| F22-RF-04 | `test_project_actions.py` | ✅ |
+| F22-RF-05 | `test_project_tools.py`, evals `f22_v1`, AT-F22-03 | ✅ |
 
 ### 11. Evidências
 | Data | Versão/commit | Ambiente | Execução (link CI) | Resultado | Aceito por |
 |---|---|---|---|---|---|
+| 2026-11-27 | branch `feat/F22-criar-projeto-jira` | local (Vertex AI, `gemini-3.5-flash-lite`) | `evals/run.py --dataset f22_v1.jsonl` (`results/2026-11-27-…-f22.json`, `…-f22-run2.json`) | 1ª execução 5/6: o agente escolheu uma chave em uso e perguntou em vez de usar a sugerida. Ajustada a instrução (chave escolhida pelo agente → usa a sugerida). 2ª execução 6/6 | — |
+| 2026-11-27 | branch `feat/F22-criar-projeto-jira` | local (emuladores + Jira sandbox + Vertex AI) | `E2E_EMULATORS=1 E2E_REAL_LLM=1 playwright test e2e/f22-criar-projeto.spec.ts` | AT-F22-02 ✅ e AT-F22-03 ✅, sem escrita no Jira (log: só a auditoria `rejected`); AT-F22-01 pulado: cria um projeto e precisa de `E2E_JIRA_WRITE=1` autorizado pelo PO | — |

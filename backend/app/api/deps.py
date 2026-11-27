@@ -214,7 +214,9 @@ def get_action_service(
     """Sem modelo de linguagem: a execução não passa pelo LLM (F06-RT-03)."""
     db = _firestore(settings.gcp_project, settings.firestore_database)
     docs = ConfluenceActionExecutor(ProjectLinkRepository(db), lambda: datetime.now(UTC))
-    return ActionService(ActionRepository(db), jira, settings, docs=docs)
+    return ActionService(
+        ActionRepository(db), jira, settings, docs=docs, projects_cache=JiraCacheRepository(db)
+    )
 
 
 def get_action_edit_service(

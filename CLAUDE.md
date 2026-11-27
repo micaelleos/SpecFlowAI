@@ -121,6 +121,12 @@ uv run --project backend pytest -q scripts --rootdir scripts -p no:cacheprovider
   `listar_arquivos_do_repositorio`/`buscar_no_repositorio`/`ler_arquivo_do_repositorio` (`agent/tools/repo_tools.py`, via the
   `RepoReader` interface; limits 100 KB/file, 20 files/turn). A rejected token marks the connection invalid and the turn goes
   on without the code. Evals: `evals/datasets/f17_v1.jsonl`; AT: `e2e/f17-repositorio.spec.ts` (`E2E_GITHUB_TOKEN`/`E2E_GITHUB_REPO`).
+- **Creating Jira projects (F22):** `propor_criacao_projeto` (`agent/tools/project_tools.py`, in `JIRA_TOOLS`) checks the key
+  with `GET /rest/api/3/projectvalidate/key` (`JiraReader.check_project_key`, with the Jira's suggested key) and proposes a
+  `create_project` action (closed template list: scrum/kanban company-managed, business task tracking). After Confirm,
+  `ActionService._execute_project` posts `/rest/api/3/project` with the connection's account as lead (needs "Administer Jira";
+  403 → `jira-project-forbidden`), pins the project on a conversation without one (F21 rule) and clears the F09 projects cache.
+  Evals: `evals/datasets/f22_v1.jsonl`; AT-F22-01 writes to Jira (`E2E_JIRA_WRITE=1`).
 - Target design (agent graph, tools, SSE event schema, Firestore model, API v1) is in
   `docs/modernizacao/03-arquitetura.md`; decisions in `docs/modernizacao/adr/`.
 

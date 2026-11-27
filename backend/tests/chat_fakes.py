@@ -19,6 +19,7 @@ from app.agent.tools.context import (
     IssueNotFoundError,
     JiraToolError,
     Project,
+    ProjectKeyCheck,
     ProposedAction,
     ToolContext,
 )
@@ -52,6 +53,15 @@ class FakeJiraReader:
         self.issues = {i.key: i for i in issues or []}
         self.searches: list[tuple[str, int]] = []
         self.fail: JiraToolError | None = None
+        self.account_name = "Pessoa PO"
+
+    async def check_project_key(self, key: str) -> ProjectKeyCheck:
+        """F22: chaves dos projetos existentes estão em uso; sugere `<chave>2`."""
+        if self.fail:
+            raise self.fail
+        if any(p.key == key for p in self.projects):
+            return ProjectKeyCheck("A project with that project key already exists", f"{key}2")
+        return ProjectKeyCheck(None)
 
     async def list_projects(self) -> list[Project]:
         if self.fail:
