@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Status** | Em validação |
+| **Status** | Em produção |
 | **Fase** | 4 — Evolução |
 | **Responsável** | PO |
 | **Dependências** | F06, F08 |
@@ -128,3 +128,5 @@ Funcionalidade: Editar a proposta antes de confirmar
 | 2026-11-27 | `feat/F14-editor-artefatos` | local | — | `make lint` OK; `make test`: backend 799 (cobertura 93,6%), frontend 183; integração no emulador (`test_action_edits_repo.py`) | — |
 | 2026-11-27 | idem | local + Vertex | — | Evals `f14_v1`: 5/5, todas as métricas em 100% (`2026-11-27-new-gemini-3.5-flash-lite-f14.json`). Regressão: F19, F20 e F21 em 100%; F05 igual ao go-live exceto `epic_complete` (instabilidade que já existia: sem as ferramentas novas, 3 falhas em 12 repetições dos casos de épico; com elas, 3 em 20) | — |
 | 2026-11-27 | idem | local + sandbox (só leitura) | — | AT-F14-02, AT-F14-03 e AT-F14-04 passam com o Gemini real; log da API: 0 `jira_write`, a confirmação da versão antiga recebeu 409 | — |
+| 2026-11-27 | `bd1fe5f` | prd | — | `make deploy` (API `specflow-api-00027-ws2` e SPA) | PO |
+| 2026-11-27 | — | prd | — | **Aceite da F14 pelo PO** (teste em produção: Edit, prévia, Save, Restore e Refine with AI). O AT-F14-01 automatizado não rodou, porque escreve no Jira | PO |

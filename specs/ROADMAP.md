@@ -23,15 +23,15 @@
 | F11 | Observabilidade, limites de uso e proteção | 3 | Em produção (App Check em `enforce` desde 2026-11-26) | F05–F10 | 6 d | 4 / 11 | [spec](011-observabilidade-e-limites/spec.md) · [plano](011-observabilidade-e-limites/plan.md) · [tarefas](011-observabilidade-e-limites/tasks.md) |
 | F12 | Go-live e desativação do Streamlit | 3 | Em implementação (beta 2026-11-19 → 25) | F01–F11 | 4 d + beta | 4 / 4 | [spec](012-go-live/spec.md) · [plano](012-go-live/plan.md) · [tarefas](012-go-live/tasks.md) |
 | F13 | Login Atlassian via OAuth 2.0 (3LO) | 4 | Rascunho · plano após GA | F04, F12 | 7 d | 4 / 4 | [spec](013-oauth-atlassian/spec.md) · [plano](013-oauth-atlassian/plan.md) |
-| F14 | Editor de artefatos antes da exportação (por seção do contrato) | 4 | Em validação | F06, F08 | 6 d | 6 / 4 | [spec](014-editor-artefatos/spec.md) · [plano](014-editor-artefatos/plan.md) |
+| F14 | Editor de artefatos antes da exportação (por seção do contrato) | 4 | Em produção | F06, F08 | 6 d | 6 / 4 | [spec](014-editor-artefatos/spec.md) · [plano](014-editor-artefatos/plan.md) |
 | F15 | Suíte contínua de avaliação do agente (evals, incluindo prontidão e implementabilidade) | 4 (baseline na 1) | Rascunho · plano após GA | F05 | 6 d | 4 / — | [spec](015-evals-agente/spec.md) · [plano](015-evals-agente/plan.md) |
 | F16 | Google Analytics (consentimento LGPD, CSP, eventos) | 4 | A especificar (aprovado pelo PO em 2026-11-14) | F02, F08 | — | — | — |
-| F17 | Contexto do repositório (GitHub, só leitura) para "Onde mexer" | 4 | Em implementação | F05, F12 | 5 d | 4 / 3 | [spec](017-contexto-repositorio/spec.md) |
+| F17 | Contexto do repositório (GitHub, só leitura) para "Onde mexer" | 4 | Em validação (em prd; AT-F17-01/02 aguardam token do PO) | F05, F12 | 5 d | 5 / 5 | [spec](017-contexto-repositorio/spec.md) · [plano](017-contexto-repositorio/plan.md) · [tarefas](017-contexto-repositorio/tasks.md) |
 | F18 | Exportar specs para o repositório (formato Spec Kit, por PR) | 4 | Rascunho · plano após GA | F06, F17 | 4 d | 4 / 2 | [spec](018-exportar-specs-repositorio/spec.md) |
 | F19 | Contexto do Confluence e metodologia em fases no agente (leitura) | 4 | Em produção | F04, F05, F06, F09, F12 | 6 d | 9 / 12 | [spec](019-contexto-confluence/spec.md) · [plano](019-contexto-confluence/plan.md) · [tarefas](019-contexto-confluence/tasks.md) |
 | F20 | Documentação do projeto no Confluence (escrita por ação proposta) | 4 | Em produção | F19, F06, F10 | 6 d | 8 / 8 | [spec](020-documentacao-confluence/spec.md) · [plano](020-documentacao-confluence/plan.md) · [tarefas](020-documentacao-confluence/tasks.md) |
-| F21 | O agente fixa o projeto da conversa (e pin manual na tela) | 4 | Em validação | F07, F19, F20 | 2,5 d | 5 / 5 | [spec](021-agente-fixa-projeto/spec.md) · [plano](021-agente-fixa-projeto/plan.md) · [tarefas](021-agente-fixa-projeto/tasks.md) |
-| F22 | O agente cria projetos no Jira (ação proposta) | 4 | Em implementação | F06, F09, F21 | 3 d | 5 / 4 | [spec](022-criar-projeto-jira/spec.md) · [plano](022-criar-projeto-jira/plan.md) · [tarefas](022-criar-projeto-jira/tasks.md) |
+| F21 | O agente fixa o projeto da conversa (e pin manual na tela) | 4 | Em produção | F07, F19, F20 | 2,5 d | 5 / 5 | [spec](021-agente-fixa-projeto/spec.md) · [plano](021-agente-fixa-projeto/plan.md) · [tarefas](021-agente-fixa-projeto/tasks.md) |
+| F22 | O agente cria projetos no Jira (ação proposta) | 4 | Em produção | F06, F09, F21 | 3 d | 5 / 4 | [spec](022-criar-projeto-jira/spec.md) · [plano](022-criar-projeto-jira/plan.md) · [tarefas](022-criar-projeto-jira/tasks.md) |
 
 **Totais:** 19 features especificadas (F16 a especificar) · 120 requisitos funcionais · 119 técnicos · ~109,5 dias de estimativa
 (contados nas specs em 2026-11-20).

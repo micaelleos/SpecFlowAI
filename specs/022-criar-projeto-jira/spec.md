@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Status** | Em implementação |
+| **Status** | Em produção |
 | **Fase** | 4 — Evolução |
 | **Responsável** | PO |
 | **Dependências** | F06, F09, F21 |
@@ -110,3 +110,5 @@ Funcionalidade: Criar projeto no Jira pelo agente
 | 2026-11-27 | branch `feat/F22-criar-projeto-jira` | local (Vertex AI, `gemini-3.5-flash-lite`) | `evals/run.py --dataset f22_v1.jsonl` ×2 (`results/2026-11-27-…-f22.json`, `…-f22-run2.json`) | 6/6 nas duas execuções (propõe com o modelo e o nome pedidos, chave em uso não reaproveitada, nenhum projeto sem pedido) | — |
 | 2026-11-27 | branch `feat/F22-criar-projeto-jira` | local (Vertex AI) | regressão `f05`, `f14_v1`, `f19_v1`, `f20_v1` e `f21_v1` com o prompt e os toolsets finais (`…-f22-f05.json`, `…-f22-f14.json`, `…-f22-f19_v1.json`, `…-f22-f20_v1.json`, `…-f22-pin.json`) | F14, F19, F20 e F21 sem queda. F05: `no_jira_02` falhou 1 vez e passou 3/3 depois; `splits_large_04` 2/3, oscilação que já existia (falhou em 2 das 7 execuções anteriores). Durante o ajuste: um parágrafo longo no prompt derrubava `asks_missing_01` (3/3 falhas) e a ferramenta antes de `fixar_projeto_da_conversa` derrubava `pin_named_02` (2/3, contra 3/3 no master); ficaram uma linha no prompt, a troca de chave dentro da ferramenta e a ferramenta no fim de cada toolset | — |
 | 2026-11-27 | branch `feat/F22-criar-projeto-jira` | local (emuladores + Jira sandbox + Vertex AI) | `E2E_EMULATORS=1 E2E_REAL_LLM=1 playwright test e2e/f22-criar-projeto.spec.ts` | AT-F22-02 ✅ e AT-F22-03 ✅, sem escrita no Jira (log: só a auditoria `rejected`); AT-F22-01 pulado: cria um projeto e precisa de `E2E_JIRA_WRITE=1` autorizado pelo PO | — |
+| 2026-11-27 | `48ea891` | prd | — | `make deploy` (API `specflow-api-00030-xm2` e SPA) | PO |
+| 2026-11-27 | — | prd | — | **Aceite da F22 pelo PO** (teste em produção: projeto proposto, confirmado e criado no Jira) | PO |

@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Status** | Em implementação |
+| **Status** | Em validação |
 | **Fase** | 4 — Evolução |
 | **Responsável** | PO |
 | **Dependências** | F05, F09, F12 |
@@ -107,3 +107,4 @@ Funcionalidade: Contexto do repositório
 |---|---|---|---|---|---|
 | 2026-11-27 | branch `feat/F17-contexto-repositorio` | local (Vertex AI, `gemini-3.5-flash-lite`) | `evals/run.py --dataset f17_v1.jsonl` ×2 (`results/2026-11-27-…-f17.json`, `…-f17-run2.json`) | 4/4 nas duas execuções: "Onde mexer" com o caminho esperado, todos os caminhos citados existem, comando de teste do repositório, injeção no `AGENTS.md` resistida | — |
 | 2026-11-27 | branch `feat/F17-contexto-repositorio` | local (emuladores + api.github.com) | `E2E_EMULATORS=1 playwright test e2e/f17-repositorio.spec.ts` | AT-F17-03 ✅ (token recusado, nada salvo; token ausente do log); AT-F17-01/02 pulados: precisam do token e do repositório do PO | — |
+| 2026-11-27 | `c22b5ce` | prd | — | `make deploy` (API `specflow-api-00029-qg2` e SPA); AT-F17-01/02 aguardam o token e o repositório do PO | — |

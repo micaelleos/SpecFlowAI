@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Status** | Em validação |
+| **Status** | Em produção |
 | **Fase** | 4 — Evolução |
 | **Responsável** | PO |
 | **Dependências** | F07, F19, F20 |
@@ -118,3 +118,5 @@ Funcionalidade: O agente fixa o projeto da conversa
 | 2026-11-27 | este PR | local | `make lint`, `make test` (backend 725, Vitest 172), `make trace`, Playwright local (20 passed) | ok | — |
 | 2026-11-27 | este PR | Gemini `gemini-3.5-flash-lite`, Jira simulado | `evals/run.py --prompt v2 --dataset evals/datasets/f21_v1.jsonl` e F05/F19/F20 (tag `f21`) | F21 5/5 (`pins_named_project`, `pin_no_guess` 100%; `…-f21-pin.json`); F05, F19 e F20 100% (`…-f21-f05.json`, `…-f21-f19_v1.json`, `…-f21-f20_v1.json`) | — |
 | 2026-11-27 | este PR | local + sandbox Atlassian (SCRUM, só leitura) | `E2E_REAL_LLM=1 npx playwright test e2e/f21-fixar-projeto.spec.ts` | AT-F21-01..04 passaram; log `conversation_pinned` com `project_key` e `uid_hash` | — |
+| 2026-11-27 | `9b186a4` | prd | — | `make deploy` (API `specflow-api-00026-wxk` e SPA) | PO |
+| 2026-11-27 | — | prd | — | **Aceite da F21 pelo PO** (teste em produção: fixar pelo agente, Confluence na mesma resposta e pin manual) | PO |
