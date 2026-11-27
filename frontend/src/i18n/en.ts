@@ -125,6 +125,8 @@ export const t = {
     deleteConfirm: (title: string) =>
       `Delete “${title}”? Its messages and pending proposals are removed. Issues already created stay in Jira.`,
     unpin: 'Unpin project',
+    pinLabel: 'Pin a project',
+    pinChoose: 'Choose…',
     showConversations: 'Show conversations',
     hideConversations: 'Hide conversations',
     conversationNotFound: 'This conversation no longer exists.',

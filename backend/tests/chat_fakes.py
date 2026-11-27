@@ -162,6 +162,14 @@ class MemoryChatStore:
         doc.update({"title": title, "titleSource": "auto"})
         return True
 
+    def pin_project(self, uid: str, conversation_id: str, project_key: str) -> str | None:
+        doc = self.conversations.get(uid, {}).get(conversation_id)
+        if doc is None:
+            return None
+        if not doc.get("projectKey"):
+            doc["projectKey"] = project_key
+        return str(doc["projectKey"])
+
     def delete_conversation(self, uid: str, conversation_id: str) -> None:
         for record in self.issues.get(uid, {}).values():
             if record.get("conversationId") == conversation_id:

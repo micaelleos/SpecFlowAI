@@ -306,3 +306,39 @@ describe('F08-RF-01 histórico paginado e conversa nova', () => {
     expect(send.mock.calls[0][0]).toBe(created.id)
   })
 })
+
+describe('F21-RF-05 pin manual', () => {
+  it('conversa sem projeto: "Pin a project" fixa e o chip aparece', async () => {
+    const api = createDemoProductApi(() => NOW)
+    const pin = vi.spyOn(api, 'pinProject')
+    await api.pinProject('c1', null)
+    pin.mockClear()
+    renderApp('/chat/c1', api)
+    const select = await screen.findByLabelText('Pin a project')
+    await userEvent.setup().selectOptions(select, 'AUTH')
+    expect(pin).toHaveBeenCalledWith('c1', 'AUTH')
+    expect(await screen.findByText('Pinned project: AUTH')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Pin a project')).not.toBeInTheDocument()
+  })
+
+  it('conversa nova: o projeto escolhido vai com a 1ª mensagem', async () => {
+    const api = createDemoProductApi(() => NOW)
+    const create = vi.spyOn(api, 'createConversation')
+    const stream = controlledStream(api)
+    renderApp('/chat', api)
+    await userEvent.setup().selectOptions(await screen.findByLabelText('Pin a project'), 'PAG')
+    expect(await screen.findByText('Pinned project: PAG')).toBeInTheDocument()
+    await typeAndSend('Olá')
+    await waitFor(() => expect(stream.calls).toHaveLength(1))
+    expect(create).toHaveBeenCalledWith('PAG')
+  })
+
+  it('com projeto fixado não há seletor', async () => {
+    renderApp(
+      '/chat/c2',
+      createDemoProductApi(() => NOW),
+    )
+    expect(await screen.findByText('Pinned project: AUTH')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Pin a project')).not.toBeInTheDocument()
+  })
+})

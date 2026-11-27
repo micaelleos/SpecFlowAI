@@ -172,7 +172,7 @@ def get_chat_service(
         agent=shared_agent(llm, settings.agent_max_iterations),
         agents={
             toolset: shared_agent(llm, settings.agent_max_iterations, toolset)
-            for toolset in ("docs", "docs_write", "space")
+            for toolset in ("jira_pin", "docs", "docs_write", "space")
         },
         confluence=ConfluenceLinkService(ProjectLinkRepository(db), jira),
     )

@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Status** | Em implementação |
+| **Status** | Em validação |
 | **Fase** | 4 — Evolução |
 | **Responsável** | PO |
 | **Dependências** | F07, F19, F20 |
@@ -102,12 +102,19 @@ Funcionalidade: O agente fixa o projeto da conversa
 ### 10. Rastreabilidade
 | Requisito | Teste(s) | Status |
 |---|---|---|
-| F21-RF-01 | — | ⏳ |
-| F21-RF-02 | — | ⏳ |
-| F21-RF-03 | — | ⏳ |
-| F21-RF-04 | — | ⏳ |
-| F21-RF-05 | — | ⏳ |
+| F21-RF-01 | `test_chat_pin.py` (ferramenta, projeto desconhecido, conversa sem projeto recebe a ferramenta), evals `pin_named_*`/`pin_no_guess_*`, AT-F21-01, AT-F21-03 | ✅ |
+| F21-RF-02 | `test_chat_pin.py::test_fixa_e_segue_o_mesmo_turno_com_a_documentacao`, AT-F21-01 | ✅ |
+| F21-RF-03 | `test_chat_pin.py` (não troca, uma por turno, corrida), `tests/integration/test_pin_project.py`, AT-F21-02 | ✅ |
+| F21-RF-04 | AT-F21-01 (o chip aparece ao fim da resposta) | ✅ |
+| F21-RF-05 | `ChatPage.test.tsx` (F21-RF-05), AT-F21-04 | ✅ |
+
+**Ajustes da implementação (2026-11-27):**
+- **Instrução:** a orientação para fixar fica só no `NO_PROJECT_NOTE`, que entra com Jira conectado e conversa sem projeto. Uma linha a mais no `system_v2.md` piorou os casos sem Jira nas evals; por isso o prompt base não muda.
+- **Continuação:** a passada do grafo para no `ToolMessage` de `fixar_projeto_da_conversa`. A seguinte parte das mensagens do turno, com a instrução nova e o toolset do projeto, e mantém `iterations`/`reviews`.
 
 ### 11. Evidências
 | Data | Versão/commit | Ambiente | Execução (link CI) | Resultado | Aceito por |
 |---|---|---|---|---|---|
+| 2026-11-27 | este PR | local | `make lint`, `make test` (backend 725, Vitest 172), `make trace`, Playwright local (20 passed) | ok | — |
+| 2026-11-27 | este PR | Gemini `gemini-3.5-flash-lite`, Jira simulado | `evals/run.py --prompt v2 --dataset evals/datasets/f21_v1.jsonl` e F05/F19/F20 (tag `f21`) | F21 5/5 (`pins_named_project`, `pin_no_guess` 100%; `…-f21-pin.json`); F05, F19 e F20 100% (`…-f21-f05.json`, `…-f21-f19_v1.json`, `…-f21-f20_v1.json`) | — |
+| 2026-11-27 | este PR | local + sandbox Atlassian (SCRUM, só leitura) | `E2E_REAL_LLM=1 npx playwright test e2e/f21-fixar-projeto.spec.ts` | AT-F21-01..04 passaram; log `conversation_pinned` com `project_key` e `uid_hash` | — |

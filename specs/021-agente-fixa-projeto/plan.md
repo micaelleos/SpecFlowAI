@@ -33,7 +33,7 @@ Sem exceção (ver spec §6).
    - `iterations` continua de onde parou.
 5. **Log:** `conversation_pinned` (`uid_hash`, `project_key`).
 6. **Pin manual (F21-RF-05):** numa conversa existente sem projeto, um `<select>` com rótulo "Pin a project" lista os projetos da conexão Jira; ao escolher, `updateConversation(id, {projectKey})` e as conversas são relidas. Conversa nova (`/chat` sem id) usa o mesmo seletor para definir o projeto antes da 1ª mensagem (`projeto` na URL).
-7. **Prompt v2:** uma linha nas ferramentas: "`fixar_projeto_da_conversa` (só em conversa sem projeto, quando o usuário nomeia o projeto)". O `NO_PROJECT_NOTE` passa a mandar usar a ferramenta quando o usuário nomeia o projeto.
+7. **Instrução:** o `NO_PROJECT_NOTE` (só com Jira conectado e conversa sem projeto) manda usar a ferramenta quando o usuário nomeia o projeto. O `system_v2.md` não muda: uma linha a mais nele piorou os casos sem Jira nas evals.
 
 ### 9. Plano de testes
 - **Unit:** a ferramenta (fixa, recusa chave desconhecida, recusa a segunda vez, recusa conversa já fixada) e a continuação com `ScriptedChatModel` (fixa e propõe página no mesmo turno; o índice do espaço vai na 2ª instrução).

@@ -124,7 +124,8 @@ async def test_sem_projeto_fixado_explica_como_ligar_a_documentacao() -> None:
     await _run(llm, FakeLinks(FakeConfluenceReader()), project=None, write=True)
     system = _system(llm)
     assert NO_PROJECT_NOTE in system
-    assert "Chat about this project" in system
+    assert "fixar_projeto_da_conversa" in system
+    assert "Pin a project" in system
     assert WRITE_NOTE not in system
 
 

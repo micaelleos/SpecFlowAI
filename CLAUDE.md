@@ -102,6 +102,11 @@ uv run --project backend pytest -q scripts --rootdir scripts -p no:cacheprovider
   `agent/templates/confluence/` mirror `docs/metodologia/modelos/` (sync test). Tool sets per turn: `jira`, `docs`,
   `docs_write` (linked + flag), `space` (no link + flag). Records in `users/{uid}/documents/{pageId}` (`/api/v1/documents`,
   "Docs" tab). Flag `CONFLUENCE_WRITE_ENABLED` (default `false`; prd `true` since 2026-11-26 via `envs/prd.tfvars`; local compose `true`). Evals: `evals/datasets/f20_v1.jsonl`.
+- **Pinning the conversation's project (F21):** in a conversation without a project (Jira connected) the agent gets
+  `fixar_projeto_da_conversa` (toolset `jira_pin`, `NO_PROJECT_NOTE`); `ChatStore.pin_project` writes `projectKey` only if
+  empty (transaction). After the pin, `ChatService._stream` stops that graph pass and continues the same turn with the
+  project's instruction and toolset (Confluence included). The agent never changes or clears the project; the user
+  can via the chat header (× or the "Pin a project" selector). Evals: `evals/datasets/f21_v1.jsonl` (`pin: true`).
 - Target design (agent graph, tools, SSE event schema, Firestore model, API v1) is in
   `docs/modernizacao/03-arquitetura.md`; decisions in `docs/modernizacao/adr/`.
 
