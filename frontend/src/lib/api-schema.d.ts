@@ -570,7 +570,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "create_issue" | "update_issue" | "create_page" | "update_page" | "create_space" | "create_project";
+            kind: "create_issue" | "update_issue" | "create_page" | "update_page" | "create_space" | "create_project" | "create_pull_request";
             /** Labels */
             labels: string[];
             /**
@@ -609,6 +609,8 @@ export interface components {
             issue_key: string;
             /** Url */
             url: string;
+            /** Warning */
+            warning?: string | null;
         };
         /** AgentPrompt */
         AgentPrompt: {

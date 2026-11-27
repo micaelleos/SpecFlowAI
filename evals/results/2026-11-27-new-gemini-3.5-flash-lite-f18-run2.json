@@ -1,0 +1,234 @@
+{
+ "agent": "new",
+ "model": "gemini-3.5-flash-lite",
+ "prompt_version": "v2",
+ "dataset": "f18_v1.jsonl",
+ "run_at": "2026-11-27T17:46:04+00:00",
+ "summary": {
+  "metrics": {
+   "export_explains": 100.0,
+   "export_no_pr": 100.0,
+   "export_no_spam": 100.0,
+   "export_proposed": 100.0,
+   "never_writes_without_proposal": 100.0
+  },
+  "cases": 6,
+  "input_tokens": 107652,
+  "output_tokens": 1239
+ },
+ "cases": [
+  {
+   "id": "export_01",
+   "category": "export",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "export_proposed": true
+   },
+   "tools": [
+    "propor_exportacao_para_repositorio"
+   ],
+   "texts": [
+    "Preparei a proposta para exportar as specs do épico **ABC-10** e suas histórias para o repositório no formato Spec Kit. \n\nA ação está aguardando a sua confirmação no cartão **(act-1)**. Assim que você confirmar, o PR será aberto na branch `specflow/abc-10` do repositório `acme/loja`."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "exports": [
+    "ABC-10"
+   ],
+   "input_tokens": 14255,
+   "output_tokens": 114,
+   "error": null
+  },
+  {
+   "id": "export_02",
+   "category": "export",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "export_proposed": true
+   },
+   "tools": [
+    "propor_exportacao_para_repositorio"
+   ],
+   "texts": [
+    "Propus a exportação das specs do épico **ABC-20** para o repositório (`acme/loja`). \n\nO cartão com a proposta de abertura de PR (`act-1`) está aguardando a sua confirmação. Assim que você aceitar, o SpecFlow enviará os arquivos no formato Spec Kit para a branch correspondente."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "exports": [
+    "ABC-20"
+   ],
+   "input_tokens": 14285,
+   "output_tokens": 107,
+   "error": null
+  },
+  {
+   "id": "export_03",
+   "category": "export",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "export_proposed": true
+   },
+   "tools": [
+    "propor_exportacao_para_repositorio"
+   ],
+   "texts": [
+    "Propus a abertura de um Pull Request no repositório `acme/loja` para exportar as specs do épico **ABC-10** e suas histórias (formato Spec Kit). \n\nA proposta está aguardando a sua confirmação no cartão **(ação `act-1`)**. Assim que você confirmar, o PR será aberto na branch `specflow/abc-10`."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "exports": [
+    "ABC-10"
+   ],
+   "input_tokens": 14251,
+   "output_tokens": 116,
+   "error": null
+  },
+  {
+   "id": "export_unknown_01",
+   "category": "export_refused",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "export_no_pr": true,
+    "export_explains": true
+   },
+   "tools": [
+    "propor_exportacao_para_repositorio"
+   ],
+   "texts": [
+    "O épico **ABC-77** não foi reconhecido como um épico criado pelo SpecFlow, por isso não é possível exportá-lo diretamente para o repositório. \n\nSe precisar, posso ajudar a criar um novo épico utilizando a metodologia SpecFlow para que ele fique elegível para exportação, ou podemos revisar o épico existente. Deseja fazer alguma alteração ou criar um novo épico?"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "exports": [],
+   "input_tokens": 14233,
+   "output_tokens": 119,
+   "error": null
+  },
+  {
+   "id": "export_no_repo_01",
+   "category": "export_refused",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "export_no_pr": true,
+    "export_explains": true
+   },
+   "tools": [],
+   "texts": [
+    "O recurso de exportar specs diretamente para o repositório (via PR) não está disponível neste projeto, pois ele não possui um repositório vinculado em *Projects*. \n\nPara realizar a exportação, recomendo que você vincule o repositório nas configurações do projeto em *Projects* e tente novamente.\n\nSe preferir, posso consultar os detalhes do épico **ABC-10** e gerar o conteúdo completo em Markdown aqui na conversa para que você possa copiá-lo manualmente para o seu repositório. Deseja que eu faça isso?"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "exports": [],
+   "input_tokens": 6305,
+   "output_tokens": 117,
+   "error": null
+  },
+  {
+   "id": "export_no_spam_01",
+   "category": "export_no_spam",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "export_no_spam": true
+   },
+   "tools": [
+    "buscar_no_repositorio",
+    "listar_arquivos_do_repositorio",
+    "listar_arquivos_do_repositorio",
+    "listar_arquivos_do_repositorio",
+    "propor_criacao_issue"
+   ],
+   "texts": [
+    "Propus a criação da história para exibir o valor do frete no resumo do pedido antes do pagamento no projeto **ABC**. \n\nA proposta está aguardando a sua confirmação no cartão acima."
+   ],
+   "proposals": [
+    {
+     "kind": "create_issue",
+     "labels": [
+      "agent-ready",
+      "specflow"
+     ],
+     "project": "ABC",
+     "spec": {
+      "title": "Exibir valor do frete no resumo do pedido antes do pagamento",
+      "objective": "Como cliente final da loja, quero visualizar o valor do frete no resumo do pedido antes de efetuar o pagamento, para ter transparência sobre o custo total da compra.",
+      "out_of_scope": [
+       "Implementação de regras de frete grátis.",
+       "Cálculo de múltiplas opções de transportadoras para escolha do usuário neste PR."
+      ],
+      "open_questions": [],
+      "human_only": false,
+      "human_only_reason": "",
+      "references": [],
+      "type": "story",
+      "context": [
+       "O fluxo atual de checkout realiza a cobrança sem exibir explicitamente o detalhamento e valor do frete antes da confirmação do pagamento."
+      ],
+      "acceptance_criteria": [
+       {
+        "id": "CA-01",
+        "kind": "principal",
+        "title": "Exibir valor do frete no resumo do pedido no checkout",
+        "given": [
+         "o usuário está na tela de checkout com produtos no carrinho",
+         "o endereço de entrega foi informado"
+        ],
+        "when": [
+         "o usuário acessa a etapa de pagamento do checkout"
+        ],
+        "then": [
+         "o resumo do pedido exibe o valor do frete calculado",
+         "o valor do frete é somado ao total antes da etapa de pagamento"
+        ]
+       },
+       {
+        "id": "CA-02",
+        "kind": "erro",
+        "title": "Tratar falha no cálculo de frete no checkout",
+        "given": [
+         "o serviço de cálculo de frete está indisponível"
+        ],
+        "when": [
+         "o checkout tenta carregar o valor do frete"
+        ],
+        "then": [
+         "uma mensagem de erro amigável é exibida no resumo do pedido",
+         "o botão de prosseguir para o pagamento permanece desabilitado"
+        ]
+       }
+      ],
+      "constraints": [
+       "O valor do frete deve ser exibido com duas casas decimais e símbolo da moeda (R$).",
+       "O cálculo do frete deve ser obtido através do serviço de pedidos existente."
+      ],
+      "where_to_change": [
+       "src/loja/pedidos/services.py: Onde a lógica de cálculo e agregação de valores do pedido é executada."
+      ],
+      "how_to_verify": [
+       "Executar os testes automatizados com o comando `make test`.",
+       "Validar via teste unitário e de integração que o resumo do pedido contém o campo de frete preenchido corretamente antes da etapa de pagamento."
+      ],
+      "dependencies": []
+     },
+     "conflicts": []
+    }
+   ],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "exports": [],
+   "input_tokens": 44323,
+   "output_tokens": 666,
+   "error": null
+  }
+ ]
+}

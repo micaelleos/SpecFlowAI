@@ -44,6 +44,10 @@ class GitHubRepoReader:
         self.searches = 0
 
     @property
+    def client(self) -> GitHubClient:
+        return self._client
+
+    @property
     def info(self) -> RepoInfo:
         return self._info
 

@@ -322,6 +322,12 @@ class JiraClient:
         key = str(response.json().get("key") or body["key"])
         return JiraCreated(key, f"{self.site_url}/browse/{key}")
 
+    async def add_remote_link(self, key: str, url: str, title: str) -> None:
+        """`POST /rest/api/3/issue/{key}/remotelink` (F18-RF-04): o link do PR no épico."""
+        await self._write(
+            "POST", f"/rest/api/3/issue/{key}/remotelink", {"object": {"url": url, "title": title}}
+        )
+
     async def myself(self) -> JiraAccount:
         """`GET /rest/api/3/myself`: valida a credencial e devolve a conta (F04-RF-02)."""
         data = (await self._request("GET", "/rest/api/3/myself")).json()

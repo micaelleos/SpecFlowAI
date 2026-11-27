@@ -230,6 +230,19 @@ export type ActionKind =
   | 'update_page'
   | 'create_space'
   | 'create_project'
+  | 'create_pull_request'
+
+/** PR com as specs de um épico no repositório vinculado (F18). */
+export interface PullRequestProposal {
+  repo: string
+  repoUrl: string
+  base: string
+  branch: string
+  title: string
+  epicKey: string
+  issueKeys: string[]
+  files: { path: string; content: string }[]
+}
 
 /** Projeto que o agente propõe criar no Jira (F22). */
 export interface NewProject {
@@ -296,6 +309,8 @@ export interface ProposedAction {
   payloadHash: string
   /** Só em `create_project` (F22). */
   project?: NewProject | null
+  /** Só em `create_pull_request` (F18). */
+  pullRequest?: PullRequestProposal | null
 }
 
 /** Mensagem do histórico (F07): o texto em Markdown e os cartões das ações propostas nela. */

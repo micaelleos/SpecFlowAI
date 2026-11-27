@@ -1,0 +1,132 @@
+{
+ "agent": "new",
+ "model": "gemini-3.5-flash-lite",
+ "prompt_version": "v2",
+ "dataset": "f21_v1.jsonl",
+ "run_at": "2026-11-27T17:47:05+00:00",
+ "summary": {
+  "metrics": {
+   "never_writes_without_proposal": 100.0,
+   "pin_no_guess": 100.0,
+   "pins_named_project": 100.0
+  },
+  "cases": 5,
+  "input_tokens": 86502,
+  "output_tokens": 794
+ },
+ "cases": [
+  {
+   "id": "pin_named_01",
+   "category": "pin_named",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "pins_named_project": true
+   },
+   "tools": [
+    "fixar_projeto_da_conversa",
+    "listar_projetos"
+   ],
+   "texts": [
+    "Para começarmos a documentar as regras de cupom de desconto no projeto **ABC (Loja Online)**, preciso de alguns detalhes para garantir que a especificação e o épico fiquem completos e prontos para o desenvolvimento (ou para um agente de código):\n\n1. **Escopo dos descontos**: Quais tipos de cupons teremos inicialmente? (Ex.: percentual sobre o valor total, valor fixo em reais, frete grátis, aplicável apenas a categorias/produtos específicos).\n2. **Restrições de uso**: Haverá regras como uso único por cliente, valor mínimo de compra, data de validade, ou cumulatividade com outras promoções?\n3. **Formato da entrega**: Você gostaria que eu crie um **Épico** no Jira estruturando toda a iniciativa de cupons de desconto (com a decomposição em histórias de usuário), ou prefere que eu proponha diretamente uma primeira **História** específica?"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "exports": [],
+   "input_tokens": 19981,
+   "output_tokens": 239,
+   "error": null
+  },
+  {
+   "id": "pin_named_02",
+   "category": "pin_named",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "pins_named_project": true
+   },
+   "tools": [
+    "fixar_projeto_da_conversa",
+    "buscar_paginas_confluence"
+   ],
+   "texts": [
+    "A conversa foi fixada no projeto **ABC** (Loja Online). \n\nNotei que, pelo escopo das minhas ferramentas disponíveis para o Jira e para o planejamento de issues e épicos, não tenho acesso direto a ferramentas de escrita ou edição de páginas no Confluence neste momento para atualizar o glossário diretamente. \n\nComo o seu pedido é para adicionar o termo **Cupom** (\"código que dá desconto no pedido\") ao glossário da documentação do projeto no Confluence, você pode adicioná-lo diretamente na página de glossário da wiki do projeto. \n\nSe você precisar planejar épicos, histórias ou tarefas relacionadas a essa funcionalidade de cupons de desconto no Jira para um agente de código implementar, é só me avisar! Deseja que eu elabore a história ou épico para o sistema de cupons?"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "exports": [],
+   "input_tokens": 20024,
+   "output_tokens": 223,
+   "error": null
+  },
+  {
+   "id": "pin_named_03",
+   "category": "pin_named",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "pins_named_project": true
+   },
+   "tools": [
+    "fixar_projeto_da_conversa"
+   ],
+   "texts": [
+    "Sim, o SpecFlow possui ferramentas para propor atualizações na documentação do Confluence quando o projeto está vinculado à conversa (conforme as regras do projeto e as páginas disponíveis). \n\nPara que eu possa verificar o seu projeto e ajudar com a documentação, por favor, me informe qual é o projeto do Jira ou fixe-o no seletor da conversa.",
+    "Pronto! A conversa foi fixada no projeto **ABC (Loja Online)**. \n\nAgora temos acesso à documentação do projeto no Confluence e às ferramentas necessárias. O que você gostaria de atualizar na documentação ou planejar no Jira?"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "exports": [],
+   "input_tokens": 19966,
+   "output_tokens": 152,
+   "error": null
+  },
+  {
+   "id": "pin_no_guess_01",
+   "category": "pin_no_guess",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "pin_no_guess": true
+   },
+   "tools": [
+    "fixar_projeto_da_conversa"
+   ],
+   "texts": [
+    "O projeto **XYZ** não foi encontrado na sua conta do Jira. \n\nOs projetos disponíveis no momento são:\n- **ABC** (Loja Online)\n- **FIN** (Financeiro)\n\nDeseja fixar a conversa em qual deles?"
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "exports": [],
+   "input_tokens": 13249,
+   "output_tokens": 80,
+   "error": null
+  },
+  {
+   "id": "pin_no_guess_02",
+   "category": "pin_no_guess",
+   "metrics": {
+    "never_writes_without_proposal": true,
+    "pin_no_guess": true
+   },
+   "tools": [
+    "listar_projetos"
+   ],
+   "texts": [
+    "Para adicionar um termo ao glossário do projeto, preciso saber em qual projeto do Jira/Confluence você deseja registrar essa alteração. \n\nAtualmente, você tem os seguintes projetos disponíveis:\n- **ABC** (Loja Online)\n- **FIN** (Financeiro)\n\nPor favor, confirme em qual projeto devemos fixar esta conversa para que eu possa verificar a documentação e prosseguir com a atualização do glossário."
+   ],
+   "proposals": [],
+   "writes_without_confirmation": 0,
+   "pages": [],
+   "projects": [],
+   "exports": [],
+   "input_tokens": 13282,
+   "output_tokens": 100,
+   "error": null
+  }
+ ]
+}

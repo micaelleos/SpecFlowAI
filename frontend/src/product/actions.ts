@@ -135,12 +135,29 @@ function newProject(action: ApiAction): ProposedAction['project'] {
   }
 }
 
+function pullRequest(action: ApiAction): ProposedAction['pullRequest'] {
+  if (action.kind !== 'create_pull_request') return null
+  const p = action.preview
+  const files = Array.isArray(p.files) ? (p.files as Preview[]) : []
+  return {
+    repo: str(p.repo) ?? '',
+    repoUrl: str(p.repo_url) ?? '',
+    base: str(p.base) ?? '',
+    branch: str(p.branch) ?? '',
+    title: str(p.title) ?? '',
+    epicKey: str(p.epic_key) ?? '',
+    issueKeys: strings(p.issue_keys),
+    files: files.map((f) => ({ path: str(f.path) ?? '', content: str(f.content) ?? '' })),
+  }
+}
+
 export function fromApiAction(action: ApiAction): ProposedAction {
   const preview = action.preview
   const result = action.result ?? null
   const docs = doc(action)
   return {
     project: newProject(action),
+    pullRequest: pullRequest(action),
     id: action.id,
     kind: action.kind,
     projectKey: str(preview.project_key),

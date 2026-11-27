@@ -22,7 +22,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal, NoReturn, Protocol
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.agent.spec.jira_payload import (
     jira_create_fields,
@@ -36,6 +36,16 @@ from app.core.errors import ApiProblemError
 from app.core.logging import uid_hash
 from app.core.telemetry import in_thread
 from app.integrations.confluence.client import ConfluenceClient
+from app.integrations.github.client import (
+    GitHubAuthError,
+    GitHubClient,
+    GitHubConflictError,
+    GitHubError,
+    GitHubForbiddenError,
+    GitHubNotFoundError,
+    GitHubUncertainError,
+    PullRequest,
+)
 from app.integrations.jira.client import (
     JiraAuthError,
     JiraBadRequestError,
@@ -87,6 +97,13 @@ class ActionStore(Protocol):
     def pin_project(self, uid: str, conversation_id: str, project_key: str) -> str | None: ...
 
 
+class GitHubClients(Protocol):
+    """A conexão GitHub do usuário (F17/F18); `GitHubService` implementa."""
+
+    async def client_for(self, uid: str) -> tuple[GitHubClient, dict[str, Any]] | None: ...
+    async def mark_invalid(self, uid: str, current: dict[str, Any]) -> Any: ...
+
+
 class ProjectsCache(Protocol):
     """Cache da lista de projetos (F09), descartado depois de criar um projeto (F22-RT-04)."""
 
@@ -96,6 +113,8 @@ class ProjectsCache(Protocol):
 class ActionResult(BaseModel):
     issue_key: str
     url: str
+    # F18: o PR foi aberto, mas o link no épico do Jira não (F18-RF-04). Fora do JSON se nulo.
+    warning: str | None = Field(default=None, exclude_if=lambda v: v is None)
 
 
 class DocResult(BaseModel):
@@ -164,6 +183,7 @@ class ActionOut(BaseModel):
         "update_page",
         "create_space",
         "create_project",
+        "create_pull_request",
     ]
     status: ActionStatus
     conversation_id: str
@@ -278,6 +298,49 @@ class Failure(BaseModel):
     code: str
     message: str
     retryable: bool  # o Jira certamente não gravou: a ação volta a `pending`
+
+
+def translate_github(payload: dict[str, Any], exc: GitHubError) -> Failure:
+    """Erro do GitHub ao abrir o PR (F18-RF-05) → mensagem em pt-BR."""
+    repo = payload.get("repo")
+    if isinstance(exc, GitHubForbiddenError):
+        return Failure(
+            code="github-write-forbidden",
+            message=f"O token do GitHub não pode escrever em {repo}. No GitHub, edite o token e "
+            "acrescente Contents: Read and write e Pull requests: Read and write; depois confirme "
+            "de novo.",
+            retryable=True,
+        )
+    if isinstance(exc, GitHubConflictError):
+        return Failure(
+            code="github-branch-exists",
+            message=f"O GitHub recusou: {exc}. Peça ao agente para propor a exportação de novo.",
+            retryable=False,
+        )
+    if isinstance(exc, GitHubAuthError):
+        return Failure(
+            code="github-auth",
+            message="O GitHub recusou o token. Reconecte em Settings e confirme de novo.",
+            retryable=True,
+        )
+    if isinstance(exc, GitHubNotFoundError):
+        return Failure(
+            code="github-not-found",
+            message=f"O repositório {repo} (ou a branch padrão) não foi encontrado pelo token.",
+            retryable=False,
+        )
+    if isinstance(exc, GitHubUncertainError):
+        return Failure(
+            code="github-uncertain",
+            message=f"O GitHub não respondeu a tempo. Confira em {repo} se a branch "
+            f"{payload.get('branch')} e o PR foram criados antes de pedir de novo.",
+            retryable=False,
+        )
+    return Failure(
+        code="github-unreachable",
+        message="Não conseguimos falar com o GitHub. Confirme de novo em instantes.",
+        retryable=True,
+    )
 
 
 def translate_project(payload: dict[str, Any], exc: JiraError) -> Failure:
@@ -432,6 +495,8 @@ def describe(doc: dict[str, Any]) -> str:
     preview = doc.get("preview") or {}
     payload = doc.get("payload") or {}
     edited = " (editada pelo usuário)" if doc.get("editedBy") == "user" else ""
+    if doc["kind"] == "create_pull_request":
+        return f"abrir um PR em {payload.get('repo')} com as specs de {payload.get('epic_key')}"
     if doc["kind"] == "create_project":
         return f'criar o projeto {payload.get("key")} ("{payload.get("name")}")'
     if doc["kind"] == "create_issue":
@@ -452,8 +517,11 @@ class ActionService:
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
         docs: ConfluenceActionExecutor | None = None,
         projects_cache: ProjectsCache | None = None,
+        github: GitHubClients | None = None,
     ) -> None:
         self._store = store
+        # F18: PRs de specs no repositório; `None`: ações `create_pull_request` falham.
+        self._github = github
         self._projects_cache = projects_cache
         self._jira = jira
         self._settings = settings
@@ -537,7 +605,77 @@ class ActionService:
             raise ActionNotPendingError(to_out(doc, now))
         if doc["kind"] in DOC_KINDS:
             return await self._execute_doc(uid, doc, now, confirmed_by or "o usuário")
+        if doc["kind"] == "create_pull_request":
+            return await self._execute_pull_request(uid, doc, now)
         return await self._execute(uid, doc, now)
+
+    async def _execute_pull_request(
+        self, uid: str, doc: dict[str, Any], now: datetime
+    ) -> ActionOut:
+        """F18 (ADR-011): branch `specflow/*`, os arquivos do payload confirmado e o PR; depois, o
+        link no épico do Jira, que vira só aviso se falhar (F18-RF-04)."""
+        payload: dict[str, Any] = doc["payload"]
+        if payload_hash(payload) != doc.get("payloadHash"):
+            await self._fail(uid, doc, _integrity(), now)
+        branch, base, repo = str(payload["branch"]), str(payload["base"]), str(payload["repo"])
+        if not branch.startswith("specflow/") or branch == base:
+            await self._fail(uid, doc, _integrity(), now)  # F18-RT-02: nunca a branch padrão
+        found = await self._github.client_for(uid) if self._github is not None else None
+        if found is None:
+            failure = Failure(
+                code="github-not-connected",
+                message="O GitHub não está conectado (ou recusou o token). Reconecte em Settings "
+                "e confirme de novo.",
+                retryable=True,
+            )
+            await self._fail(uid, doc, failure, now)
+        gh, connection = found
+        try:
+            sha = await gh.branch_sha(repo, base)
+            if sha is None:
+                raise GitHubNotFoundError(f"a branch {base} não existe")
+            await gh.create_branch(repo, branch, sha)
+            message = f"docs(spec): {payload['epic_key']} via SpecFlow AI"
+            for file in payload["files"]:
+                await gh.put_file(repo, branch, str(file["path"]), str(file["content"]), message)
+            pr = await gh.create_pull(
+                repo, branch, base, str(payload["title"]), str(payload["body"])
+            )
+        except GitHubError as exc:
+            if isinstance(exc, GitHubAuthError) and self._github is not None:
+                await self._github.mark_invalid(uid, connection)
+            await self._fail(uid, doc, translate_github(payload, exc), now)
+        finally:
+            await gh.aclose()
+        warning = await self._link_epic(uid, doc, pr)
+        result = ActionResult(issue_key=f"#{pr.number}", url=pr.url, warning=warning)
+        change = {
+            "status": "done",
+            "result": result.model_dump(exclude_none=True),
+            "executedAt": self._clock(),
+        }
+        await self._run(self._store.update_action, uid, doc["id"], change)
+        doc = {**doc, **change}
+        text = f"O usuário confirmou e o SpecFlow abriu o PR #{pr.number} em {repo} ({pr.url})."
+        if warning:
+            text += f" Aviso: {warning}"
+        await self._system_message(uid, doc, text)
+        self._audit(uid, doc, "done", pr=pr.number)
+        return to_out(doc, now)
+
+    async def _link_epic(self, uid: str, doc: dict[str, Any], pr: PullRequest) -> str | None:
+        epic = str(doc["payload"]["epic_key"])
+        try:
+            client = await self._client(uid, doc)
+        except _ConnectionChangedError:
+            return f"o link no épico {epic} não foi criado: a conexão com o Jira mudou."
+        try:
+            await client.add_remote_link(epic, pr.url, f"PR #{pr.number} — specs (SpecFlow AI)")
+        except JiraError:
+            return f"o link do PR no épico {epic} não foi criado no Jira."
+        finally:
+            await client.aclose()
+        return None
 
     def _docs_enabled(self) -> bool:
         return (
@@ -725,7 +863,13 @@ class ActionService:
         await self._run(self._store.update_action, uid, doc["id"], change)
         doc = {**doc, **change}
         if not failure.retryable:
-            where = "no Confluence" if doc["kind"] in DOC_KINDS else "no Jira"
+            where = (
+                "no Confluence"
+                if doc["kind"] in DOC_KINDS
+                else "no GitHub"
+                if doc["kind"] == "create_pull_request"
+                else "no Jira"
+            )
             await self._system_message(
                 uid, doc, f"A ação ({describe(doc)}) falhou {where}: {failure.message}"
             )
@@ -746,7 +890,11 @@ class ActionService:
             "result": result,
             "code": extra.get("code"),
         }
-        if doc["kind"] in DOC_KINDS:
+        if doc["kind"] == "create_pull_request":  # F18-RT-04
+            event = "github_write"
+            fields["repo"] = (doc.get("payload") or {}).get("repo")
+            fields["pr"] = extra.get("pr")
+        elif doc["kind"] in DOC_KINDS:
             event = "confluence_write"
             fields["page_id"] = extra.get("page_id")
             started = extra.get("started")

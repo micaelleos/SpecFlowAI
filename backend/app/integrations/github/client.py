@@ -5,6 +5,7 @@ O host é fixo (`api.github.com`): nenhuma URL vem do usuário (F17-RT-02). Nada
 """
 
 import asyncio
+import base64
 import re
 from dataclasses import dataclass
 from types import TracebackType
@@ -42,6 +43,14 @@ class GitHubUnreachableError(GitHubError):
     """GitHub fora do ar ou lento demais depois das tentativas."""
 
 
+class GitHubConflictError(GitHubError):
+    """409/422 numa escrita: a branch já existe, o arquivo mudou ou o PR já existe."""
+
+
+class GitHubUncertainError(GitHubError):
+    """A escrita foi enviada, mas a resposta não veio (timeout, 5xx): o GitHub pode ter gravado."""
+
+
 class FileTooLargeError(GitHubError):
     """Arquivo acima de `MAX_FILE_BYTES`: não é lido (F17-RT-03)."""
 
@@ -69,9 +78,23 @@ class TreeEntry:
 
 
 @dataclass(frozen=True)
+class PullRequest:
+    number: int
+    url: str
+
+
+@dataclass(frozen=True)
 class Tree:
     entries: list[TreeEntry]
     truncated: bool
+
+
+def _message(response: httpx.Response) -> str:
+    try:
+        data = response.json()
+    except ValueError:
+        return f"GitHub respondeu {response.status_code}"
+    return str(data.get("message") or response.status_code) if isinstance(data, dict) else ""
 
 
 def valid_path(path: str) -> bool:
@@ -152,6 +175,74 @@ class GitHubClient:
         if response.status_code >= 400:
             raise GitHubUnreachableError(f"GitHub respondeu {response.status_code}")
         return response
+
+    async def _send(self, method: str, path: str, body: dict[str, Any]) -> httpx.Response:
+        """Escrita (F18, ADR-011): nunca repetida depois de enviada; o GitHub pode ter gravado."""
+        try:
+            response = await self._http.request(method, path, json=body)
+        except (httpx.ConnectError, httpx.ConnectTimeout):
+            raise GitHubUnreachableError("GitHub inacessível") from None
+        except httpx.TransportError:
+            raise GitHubUncertainError("o GitHub não respondeu a tempo") from None
+        status = response.status_code
+        if status == 401:
+            raise GitHubAuthError("O GitHub recusou o token")
+        if status in (403, 429):
+            raise GitHubForbiddenError("O token não tem permissão de escrita neste repositório")
+        if status == 404:
+            raise GitHubNotFoundError("Não encontrado no GitHub")
+        if status in (409, 422):
+            raise GitHubConflictError(_message(response))
+        if status >= 500:
+            raise GitHubUncertainError(f"GitHub respondeu {status}")
+        if status >= 300:
+            raise GitHubUnreachableError(f"GitHub respondeu {status}")
+        return response
+
+    async def branch_sha(self, full_name: str, branch: str) -> str | None:
+        """O commit da ponta da branch, ou `None` se ela não existe."""
+        try:
+            data = (
+                await self._get(f"/repos/{full_name}/git/ref/heads/{quote(branch, safe='/')}")
+            ).json()
+        except GitHubNotFoundError:
+            return None
+        return str(data["object"]["sha"]) if isinstance(data, dict) else None
+
+    async def create_branch(self, full_name: str, branch: str, sha: str) -> None:
+        if not branch.startswith("specflow/"):
+            raise GitHubConflictError("o SpecFlow só cria branches specflow/*")  # ADR-011
+        await self._send(
+            "POST", f"/repos/{full_name}/git/refs", {"ref": f"refs/heads/{branch}", "sha": sha}
+        )
+
+    async def put_file(
+        self, full_name: str, branch: str, path: str, content: str, message: str
+    ) -> None:
+        """Arquivo novo na branch `specflow/*` (`PUT /contents/{path}`)."""
+        if not branch.startswith("specflow/") or not valid_path(path):
+            raise GitHubConflictError("caminho ou branch fora do permitido")
+        await self._send(
+            "PUT",
+            f"/repos/{full_name}/contents/{quote(path)}",
+            {
+                "message": message,
+                "content": base64.b64encode(content.encode()).decode(),
+                "branch": branch,
+            },
+        )
+
+    async def create_pull(
+        self, full_name: str, head: str, base: str, title: str, body: str
+    ) -> PullRequest:
+        data = (
+            await self._send(
+                "POST",
+                f"/repos/{full_name}/pulls",
+                {"title": title, "head": head, "base": base, "body": body},
+            )
+        ).json()
+        return PullRequest(number=int(data["number"]), url=str(data["html_url"]))
 
     async def user(self) -> GitHubUser:
         data = (await self._get("/user")).json()

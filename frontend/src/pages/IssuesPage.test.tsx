@@ -194,3 +194,24 @@ describe('F20-RF-08 aba Docs', () => {
     expect(await screen.findByText(/No pages yet/)).toBeInTheDocument()
   })
 })
+
+describe('F18-RF-01 exportar épico para o repositório', () => {
+  it('só épicos com spec têm o link, que abre o chat com o pedido escrito', async () => {
+    const { user } = setup([
+      issue('ABC-10', { type: 'Epic' }),
+      issue('ABC-11'),
+      issue('ABC-12', { type: 'Epic', hasSpec: false }),
+    ])
+    const link = await screen.findByRole('link', {
+      name: 'Export ABC-10 and its stories to the code repository',
+    })
+    expect(screen.queryByRole('link', { name: /Export ABC-11/ })).toBeNull()
+    expect(screen.queryByRole('link', { name: /Export ABC-12/ })).toBeNull()
+
+    await user.click(link)
+
+    expect(await screen.findByRole('textbox')).toHaveValue(
+      'Exporte o épico ABC-10 e as histórias dele para o repositório (formato Spec Kit).',
+    )
+  })
+})

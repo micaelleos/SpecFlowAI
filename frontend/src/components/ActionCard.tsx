@@ -5,7 +5,13 @@ import { RefineContext } from '../chat/refine'
 import { errorMessage, t } from '../i18n/en'
 import { ActionProblem } from '../product/actions'
 import { useProduct } from '../product/context'
-import type { EditableSpec, ProposedAction, Readiness, SpecSection } from '../product/types'
+import type {
+  EditableSpec,
+  ProposedAction,
+  PullRequestProposal,
+  Readiness,
+  SpecSection,
+} from '../product/types'
 import { DocActionBody } from './DocActionCard'
 import { Markdown } from './Markdown'
 import { SpecEditor } from './SpecEditor'
@@ -107,34 +113,44 @@ export function ActionCard({
   }
   const creating = action.kind === 'create_issue'
   const project = action.project ?? null
+  const pr = action.pullRequest ?? null
   const a = t.chat.action
   const e = t.chat.edit
-  const heading = project
-    ? a.titleProject(project.key)
-    : creating
-      ? a.titleCreate(action.issueType ?? 'issue', action.projectKey ?? '')
-      : a.titleUpdate(action.issueKey ?? '')
+  const heading = pr
+    ? a.titlePr(pr.repo)
+    : project
+      ? a.titleProject(project.key)
+      : creating
+        ? a.titleCreate(action.issueType ?? 'issue', action.projectKey ?? '')
+        : a.titleUpdate(action.issueKey ?? '')
   const editable = status === 'pending' && action.spec !== null && action.payloadHash !== ''
   const editing = editable && draft !== null
 
-  const fields: [string, string, string?][] = project
+  const fields: [string, string, string?][] = pr
     ? [
-        [a.projectName, project.name],
-        [a.projectKey, project.key],
-        [a.template, project.templateLabel],
-        [a.lead, a.leadYou(project.lead)],
-        [a.description, project.description || '—', 'sm:col-span-2'],
+        [a.repository, pr.repo],
+        [a.branch, a.branchInto(pr.branch, pr.base), 'sm:col-span-2'],
+        [a.prTitle, pr.title, 'sm:col-span-3'],
+        [a.issuesInPr, pr.issueKeys.join(', '), 'sm:col-span-3'],
       ]
-    : creating
+    : project
       ? [
-          [a.project, [action.projectKey, action.projectName].filter(Boolean).join(' · ')],
-          [a.type, action.issueType ?? '—'],
-          [a.priority, action.priority ?? a.projectDefault],
-          [a.issueTitle, action.title, 'sm:col-span-2'],
-          [a.parent, action.parentKey ?? '—'],
-          [a.labels, action.labels.join(', ') || '—', 'sm:col-span-3'],
+          [a.projectName, project.name],
+          [a.projectKey, project.key],
+          [a.template, project.templateLabel],
+          [a.lead, a.leadYou(project.lead)],
+          [a.description, project.description || '—', 'sm:col-span-2'],
         ]
-      : [[a.issue, action.issueKey ?? '—']]
+      : creating
+        ? [
+            [a.project, [action.projectKey, action.projectName].filter(Boolean).join(' · ')],
+            [a.type, action.issueType ?? '—'],
+            [a.priority, action.priority ?? a.projectDefault],
+            [a.issueTitle, action.title, 'sm:col-span-2'],
+            [a.parent, action.parentKey ?? '—'],
+            [a.labels, action.labels.join(', ') || '—', 'sm:col-span-3'],
+          ]
+        : [[a.issue, action.issueKey ?? '—']]
 
   return (
     <section
@@ -189,6 +205,7 @@ export function ActionCard({
           <ReadinessBox readiness={action.readiness} labels={action.labels} />
           <Conflicts action={action} />
           {action.changes.length > 0 && <Changes action={action} />}
+          {pr && <PullRequestFiles pr={pr} />}
           {action.sections.length > 0 && (
             <details className="border-t border-zinc-100 px-5 py-3 text-sm" open={creating}>
               <summary className="cursor-pointer font-medium">{a.spec}</summary>
@@ -213,7 +230,13 @@ export function ActionCard({
         {status === 'pending' && !editing && (
           <div className="flex flex-wrap gap-2">
             <Button type="button" disabled={busy} onClick={() => confirm.mutate(action)}>
-              {project ? a.confirmProject : creating ? a.confirm : a.confirmUpdate}
+              {pr
+                ? a.confirmPr
+                : project
+                  ? a.confirmProject
+                  : creating
+                    ? a.confirm
+                    : a.confirmUpdate}
             </Button>
             {editable && action.spec && (
               <Button
@@ -256,11 +279,13 @@ export function ActionCard({
         )}
         {status === 'done' && action.resultKey && (
           <p role="status" className="text-sm text-green-800">
-            {project
-              ? a.createdProject(action.resultKey)
-              : creating
-                ? a.created(action.resultKey)
-                : a.updated(action.resultKey)}
+            {pr
+              ? a.openedPr(action.resultKey)
+              : project
+                ? a.createdProject(action.resultKey)
+                : creating
+                  ? a.created(action.resultKey)
+                  : a.updated(action.resultKey)}
             {action.resultUrl && (
               <>
                 {' · '}
@@ -270,12 +295,13 @@ export function ActionCard({
                   rel="noopener noreferrer"
                   className="font-medium text-indigo-700 underline"
                 >
-                  {a.openInJira}
+                  {pr ? a.openOnGitHub : a.openInJira}
                 </a>
               </>
             )}
           </p>
         )}
+        {status === 'done' && pr && action.warning && <Alert kind="info">{action.warning}</Alert>}
         {status === 'failed' && (
           <p role="status" className="text-sm text-red-800">
             {action.error ?? a.failed} {a.askAgent}
@@ -293,6 +319,25 @@ export function ActionCard({
         )}
       </div>
     </section>
+  )
+}
+
+/** Os arquivos do PR com o conteúdo inteiro (F18-RF-01): é o que o Confirm grava. */
+function PullRequestFiles({ pr }: { pr: PullRequestProposal }) {
+  const a = t.chat.action
+  return (
+    <details className="border-t border-zinc-100 px-5 py-3 text-sm" open>
+      <summary className="cursor-pointer font-medium">{a.files(pr.files.length)}</summary>
+      <p className="mt-2 text-xs text-zinc-600">{a.prNote}</p>
+      {pr.files.map((f) => (
+        <details key={f.path} className="mt-2 rounded-md border border-zinc-200">
+          <summary className="cursor-pointer px-3 py-2 font-mono text-xs">{f.path}</summary>
+          <pre className="max-h-96 overflow-auto bg-zinc-50 px-3 py-2 text-xs whitespace-pre-wrap">
+            {f.content}
+          </pre>
+        </details>
+      ))}
+    </details>
   )
 }
 

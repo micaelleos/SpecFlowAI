@@ -110,6 +110,16 @@ class ActionRepository(ConversationRepository):
 
         run(self._db.transaction(max_attempts=MAX_ATTEMPTS))
 
+    def child_actions(self, uid: str, epic_key: str) -> list[dict[str, Any]]:
+        """Criações concluídas com o épico como pai (F18): as histórias que o SpecFlow criou."""
+        query = (
+            self._actions(uid)
+            .where(filter=firestore.FieldFilter("payload.parent_key", "==", epic_key))
+            .where(filter=firestore.FieldFilter("status", "==", "done"))
+        )
+        docs = [{"id": d.id, **(d.to_dict() or {})} for d in query.stream()]
+        return [d for d in docs if d.get("kind") == "create_issue"]
+
     def get_issue(self, uid: str, key: str) -> dict[str, Any] | None:
         snapshot = self._issues(uid).document(key).get()
         return {"key": snapshot.id, **(snapshot.to_dict() or {})} if snapshot.exists else None

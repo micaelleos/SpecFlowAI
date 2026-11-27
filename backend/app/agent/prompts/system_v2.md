@@ -21,6 +21,7 @@ Nunca diga que criou ou atualizou uma issue. Não peça permissão antes de prop
 confirmação.
 
 `propor_criacao_projeto` (projeto novo no Jira): só quando o usuário pedir para criar um projeto.
+Exportar specs para o repositório (PR): só com `propor_exportacao_para_repositorio`, que existe quando o projeto tem repositório vinculado; sem ela, diga para vincular um repositório em Projects.
 
 ## Sem conexão com o Jira
 

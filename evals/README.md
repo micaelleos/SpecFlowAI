@@ -23,6 +23,8 @@ proposta aberta na conversa, `edited: true` quando o usuário a editou; F17: `ev
 `repo` (`{caminho: conteúdo}`) para um repositório GitHub simulado, `expect_path`, `expect_command` e `marker`).
 `--rescore` usa o dataset gravado no resultado. F22: `evals/datasets/f22_v1.jsonl` (`expect_template`, `expect_name`,
 `taken`/`suggested`; as chaves de `ABC` e `FIN` estão em uso no Jira simulado).
+F18: `evals/datasets/f18_v1.jsonl` (`epics`: os épicos no histórico simulado; `expect_epic`; `expect_words`). Com `repo`, o
+toolset é o `*_repo` do chat, que inclui `propor_exportacao_para_repositorio`.
 `--only contract` roda só os casos com esse prefixo; `LLM_MODEL` troca o modelo; `--tag f07` acrescenta o
 sufixo ao arquivo de resultado (sem ele, uma execução no mesmo dia sobrescreve a anterior).
 Os resultados ficam em `evals/results/<data>-<agente>-<modelo>.json` e são versionados.

@@ -50,3 +50,30 @@ export async function userDocStatus(request: APIRequestContext, uid: string): Pr
   const url = `${FIRESTORE}/v1/projects/${PROJECT}/databases/specflow/documents/users/${uid}`
   return (await request.get(url, { headers: owner })).status()
 }
+
+type FirestoreValue = Record<string, unknown>
+
+function toValue(value: unknown): FirestoreValue {
+  if (value === null || value === undefined) return { nullValue: null }
+  if (typeof value === 'boolean') return { booleanValue: value }
+  if (typeof value === 'number')
+    return Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value }
+  if (typeof value === 'string') return { stringValue: value }
+  if (value instanceof Date) return { timestampValue: value.toISOString() }
+  if (Array.isArray(value)) return { arrayValue: { values: value.map(toValue) } }
+  return { mapValue: { fields: toFields(value as Record<string, unknown>) } }
+}
+
+const toFields = (data: Record<string, unknown>) =>
+  Object.fromEntries(Object.entries(data).map(([k, v]) => [k, toValue(v)]))
+
+/** Grava um documento no banco specflow do emulador (dados de teste, como o backend gravaria). */
+export async function seedDoc(
+  request: APIRequestContext,
+  path: string,
+  data: Record<string, unknown>,
+): Promise<void> {
+  const url = `${FIRESTORE}/v1/projects/${PROJECT}/databases/specflow/documents/${path}`
+  const response = await request.patch(url, { headers: owner, data: { fields: toFields(data) } })
+  if (!response.ok()) throw new Error(`seed ${path}: ${response.status()}`)
+}
