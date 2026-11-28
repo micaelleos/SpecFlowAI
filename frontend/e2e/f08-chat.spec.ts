@@ -1,5 +1,6 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page, test } from '@playwright/test'
+
+import { serious } from './a11y'
 
 import { createAccount, EMULATORS } from './emulators'
 
@@ -26,13 +27,6 @@ async function send(page: Page, text: string) {
   const box = page.getByLabel('Message')
   await box.fill(text)
   await box.press('Enter')
-}
-
-async function serious(page: Page) {
-  const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
-  return violations
-    .filter((v) => v.impact === 'serious' || v.impact === 'critical')
-    .map((v) => `${v.id}: ${v.help}`)
 }
 
 const sidebar = (page: Page) => page.getByRole('complementary', { name: 'Conversations' })

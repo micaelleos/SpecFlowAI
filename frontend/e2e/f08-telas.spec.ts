@@ -1,5 +1,6 @@
-import AxeBuilder from '@axe-core/playwright'
-import { expect, type Page, test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
+
+import { serious } from './a11y'
 
 import { createAccount, EMULATORS } from './emulators'
 
@@ -14,13 +15,6 @@ const SCREENS = [
   ['Settings', '/settings', 'Settings'],
   ['My account', '/account', 'My account'],
 ] as const
-
-async function serious(page: Page) {
-  const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
-  return violations
-    .filter((v) => v.impact === 'serious' || v.impact === 'critical')
-    .map((v) => `${v.id}: ${v.help}`)
-}
 
 test.describe('F08 telas principais', () => {
   test('F08-RF-11 F08-RT-04 página inicial pública sem violações', async ({ page }) => {
