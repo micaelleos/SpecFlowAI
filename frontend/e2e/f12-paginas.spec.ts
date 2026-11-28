@@ -1,15 +1,9 @@
-import AxeBuilder from '@axe-core/playwright'
-import { expect, type Page, test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
+
+import { serious } from './a11y'
 
 // AT-F12-03: rodapé da página inicial com ajuda e status da API; Privacy pública, sem login e sem
 // violações sérias de acessibilidade. Roda contra `make dev` ou prd (E2E_BASE_URL); não escreve nada.
-async function serious(page: Page) {
-  const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
-  return violations
-    .filter((v) => v.impact === 'serious' || v.impact === 'critical')
-    .map((v) => `${v.id}: ${v.help}`)
-}
-
 test('F12-RF-03 F12-RF-04 AT-F12-03 ajuda e privacidade públicas e acessíveis', async ({
   page,
 }) => {

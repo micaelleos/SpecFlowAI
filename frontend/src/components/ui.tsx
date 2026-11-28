@@ -12,7 +12,7 @@ export function Field({
       </label>
       <input
         id={id}
-        className="rounded-md border border-slate-300 px-3 py-2 focus:outline-2 focus:outline-indigo-600"
+        className="rounded-md border border-slate-300 px-3 py-2 transition-colors duration-150 hover:border-slate-400 focus:outline-2 focus:outline-indigo-600"
         {...input}
       />
     </div>
@@ -31,7 +31,7 @@ export function Button({
   }[variant]
   return (
     <button
-      className={`min-h-11 rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50 ${styles} ${className}`}
+      className={`min-h-11 rounded-lg px-4 py-2 text-sm font-medium transition duration-150 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 ${styles} ${className}`}
       {...props}
     />
   )
@@ -91,7 +91,7 @@ export function Panel({
   return (
     <section
       aria-label={label}
-      className={`rounded-xl border border-zinc-200 bg-white p-6 ${className}`}
+      className={`animate-panel-in rounded-xl border border-zinc-200 bg-white p-6 ${className}`}
     >
       {children}
     </section>

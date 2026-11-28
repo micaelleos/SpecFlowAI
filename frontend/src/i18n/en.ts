@@ -34,6 +34,21 @@ export const t = {
     signUp: 'Sign up',
     sharedLogin:
       'Sign-in is shared with the other apps in this portfolio: if you already have an account in one of them, use it here.',
+    subtitle: 'Welcome back. Pick up your specs where you left them.',
+    asideTitle: 'Specs grounded in your docs and your code',
+    asideItems: [
+      {
+        title: 'Reads your Confluence',
+        body: 'Business rules, ADRs and glossary go into the spec, with the pages cited.',
+      },
+      { title: 'Knows your repository', body: 'Real file paths from GitHub in “Where to change”.' },
+      {
+        title: 'Edit before Jira',
+        body: 'Change any section on the card, or ask the AI to refine it.',
+      },
+      { title: 'Specs in your repo', body: 'Export an epic as a pull request in Spec Kit format.' },
+    ],
+    asideNote: 'Nothing is written to Jira, Confluence or GitHub until you confirm.',
   },
   signup: {
     title: 'Create your account',
@@ -402,10 +417,10 @@ export const t = {
   github: {
     panel: 'GitHub connection',
     intro:
-      'Optional. With a read-only token, the agent reads the repository linked to each project to fill “Where to change” with real paths. SpecFlow never writes to GitHub and keeps no copy of the code.',
+      'Optional. The agent reads the repository linked to each project to fill “Where to change” with real paths, and keeps no copy of the code. It writes only when you confirm exporting an epic: a new branch and a pull request, never the default branch.',
     tokenLabel: 'Fine-grained token',
     tokenHint:
-      'Repository access: only the repositories you want · Permissions: Contents → Read-only. Nothing else.',
+      'Repository access: only the repositories you want · Permissions: Contents → Read-only (to read code). To export specs as pull requests: Contents and Pull requests → Read and write.',
     save: 'Connect GitHub',
     connectedAs: (login: string) => `GitHub connected · ${login}`,
     invalid: 'GitHub rejected the saved token',
@@ -578,7 +593,33 @@ export const t = {
     signUp: 'Create free account',
     badge: 'Portfolio project · in active development',
     title: 'Jira issues your coding agent can actually ship.',
-    lead: 'Coding agents are only as good as the ticket they get. SpecFlow AI turns a conversation with your Product Owner into epics, stories and tasks with a clear goal, testable acceptance criteria and explicit scope — so Claude Code, Copilot or Cursor build the right thing on the first pass.',
+    lead: 'Coding agents are only as good as the ticket they get. SpecFlow AI turns a conversation with your Product Owner into epics, stories and tasks with a clear goal, testable acceptance criteria and explicit scope, grounded in your Confluence docs and your code, so Claude Code, Copilot or Cursor build the right thing on the first pass.',
+    integrationsTitle: 'Works where your team already works',
+    integrationsBody:
+      'One Atlassian token and one GitHub token. SpecFlow reads freely to understand your project; every write is a card you confirm.',
+    readsLabel: 'Reads',
+    writesLabel: 'Writes, after you confirm',
+    integrations: [
+      {
+        name: 'Jira',
+        reads: 'Projects, issues and epics, to avoid duplicates and link stories to their epic.',
+        writes: 'Epics, stories and tasks, updates to existing issues, and new projects.',
+      },
+      {
+        name: 'Confluence',
+        reads:
+          'The project’s space: constitution, business rules, ADRs and glossary, cited in each spec.',
+        writes:
+          'New pages from the methodology templates and section-by-section updates, shown as a diff.',
+      },
+      {
+        name: 'GitHub',
+        reads:
+          'AGENTS.md, the file tree and the files that matter, for real paths in “Where to change”.',
+        writes:
+          'A pull request on its own branch with the epic’s specs in Spec Kit format. Never the default branch.',
+      },
+    ],
     ctaPrimary: 'Get started free',
     ctaSecondary: 'I have an account',
     exampleCaption: 'Illustrative conversation',
@@ -638,8 +679,8 @@ export const t = {
     howTitle: 'How it works',
     steps: [
       {
-        title: 'Connect Jira',
-        body: 'Add your site, email and an API token. The token is encrypted with Cloud KMS and never sent back to the browser.',
+        title: 'Connect your tools',
+        body: 'Add your Jira site and an API token, and optionally a GitHub token. Tokens are encrypted with Cloud KMS and never sent back to the browser.',
       },
       {
         title: 'Describe the need',
@@ -647,11 +688,11 @@ export const t = {
       },
       {
         title: 'Review and confirm',
-        body: 'The agent proposes the issues and shows whether each one is agent-ready. Nothing is written to Jira until you confirm.',
+        body: 'The agent proposes the issues and shows whether each one is agent-ready. Edit any section on the card first; nothing is written until you confirm.',
       },
       {
         title: 'Hand off to your coding agent',
-        body: 'Claude Code, Cursor and other agents read the issue straight from Jira through Atlassian’s MCP server, or you copy it in one click.',
+        body: 'Agents read the issue straight from Jira through Atlassian’s MCP server, you copy it in one click, or you export the epic to your repository as a pull request.',
       },
     ],
     featuresTitle: 'Built for teams that ship with AI',
@@ -659,6 +700,14 @@ export const t = {
       {
         title: 'Specs agents can implement',
         body: 'Goal, criteria, scope and verification in every issue, in the same order every time.',
+      },
+      {
+        title: 'Grounded in your docs',
+        body: 'Before writing, the agent reads the project’s Confluence space and warns when a request contradicts a documented rule or decision.',
+      },
+      {
+        title: 'Knows your code',
+        body: 'With a linked repository, “Where to change” and “How to verify” name real files and the commands your project uses.',
       },
       {
         title: 'Big asks become small PRs',
@@ -669,21 +718,25 @@ export const t = {
         body: 'When an error message or a limit is unknown, the agent asks you. What stays open is flagged, not filled in.',
       },
       {
+        title: 'Edit before you confirm',
+        body: 'Change any section of a proposal on its card, or ask the AI to refine one. Restore the agent’s version anytime.',
+      },
+      {
+        title: 'Specs in your repository',
+        body: 'Export an epic and its stories as spec.md and tasks.md in a pull request your team reviews.',
+      },
+      {
         title: 'You stay in control',
-        body: 'Every Jira write is a proposal you confirm or reject. What gets created is exactly what you saw.',
+        body: 'Every write to Jira, Confluence or GitHub is a proposal you confirm or reject. What gets written is exactly what you saw.',
       },
       {
         title: 'Knows when to say “human only”',
         body: 'Changes touching security, personal data or authentication are labeled for a person to implement.',
       },
-      {
-        title: 'Works with the tools you have',
-        body: 'Jira stays the source of truth. No new tracker, no plugin to install for your coding agent.',
-      },
     ],
     statusTitle: 'Where things stand',
     status:
-      'SpecFlow AI is a portfolio project built in the open, now in beta. The agent, the confirmation flow, your projects and the history of created issues are live, with a daily usage limit per account.',
+      'SpecFlow AI is a portfolio project built in the open, now in beta. Live today: the agent with the confirmation flow, Confluence docs (read and write), code context from GitHub, spec export by pull request, Jira project creation and the history of everything created, with a daily usage limit per account.',
     closingTitle: 'Want to try it?',
     closingBody:
       'Create a free account, connect your Jira, and turn your next idea into a spec an AI agent can implement.',

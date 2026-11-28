@@ -11,6 +11,7 @@ import { Link, Navigate } from 'react-router'
 import { useAuth } from '../auth/context'
 import { t } from '../i18n/en'
 import { ApiStatus } from '../components/ApiStatus'
+import { Mark } from '../components/Mark'
 import { SOURCE_URL, SUPPORT_URL } from '../lib/links'
 
 const L = t.landing
@@ -19,15 +20,6 @@ function prefersReducedMotion(): boolean {
   return typeof window.matchMedia === 'function'
     ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
     : false
-}
-
-function Mark() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6 shrink-0">
-      <rect x="4" y="4" width="16" height="16" rx="3" transform="rotate(45 12 12)" fill="#4f46e5" />
-      <rect x="9" y="9" width="6" height="6" rx="1" transform="rotate(45 12 12)" fill="#fff" />
-    </svg>
-  )
 }
 
 /**
@@ -357,6 +349,51 @@ export function LandingPage() {
               </p>
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      <section
+        aria-labelledby="integrations"
+        className="relative isolate mt-20 overflow-hidden bg-zinc-900 text-white"
+      >
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -bottom-40 left-1/3 size-[26rem] animate-glow rounded-full bg-indigo-600/25 blur-3xl" />
+          <div className="absolute inset-0 bg-[radial-gradient(rgb(255_255_255/0.05)_1px,transparent_1px)] [background-size:24px_24px]" />
+        </div>
+        <div className="mx-auto max-w-6xl px-4 py-20 md:px-8">
+          <Reveal className="max-w-2xl">
+            <h2 id="integrations" className="text-2xl font-bold md:text-3xl">
+              {L.integrationsTitle}
+            </h2>
+            <p className="mt-4 text-zinc-300">{L.integrationsBody}</p>
+          </Reveal>
+          <ul className="mt-10 grid gap-4 md:grid-cols-3">
+            {L.integrations.map((tool, i) => (
+              <Reveal as="li" key={tool.name} delay={i * 120}>
+                <div className="flex h-full flex-col gap-5 rounded-xl border border-zinc-700/80 bg-zinc-800/60 p-6 backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-indigo-400/50">
+                  <h3 className="text-lg font-semibold">{tool.name}</h3>
+                  <div>
+                    <p className="font-mono text-xs tracking-wide text-zinc-400 uppercase">
+                      {L.readsLabel}
+                    </p>
+                    <p className="mt-1.5 text-sm text-zinc-200">{tool.reads}</p>
+                  </div>
+                  <div className="mt-auto border-t border-zinc-700 pt-4">
+                    <p className="flex items-center gap-2 font-mono text-xs tracking-wide text-indigo-300 uppercase">
+                      <span
+                        aria-hidden="true"
+                        className="flex size-4 items-center justify-center rounded-full bg-indigo-500/25 text-[10px] text-indigo-200"
+                      >
+                        ✓
+                      </span>
+                      {L.writesLabel}
+                    </p>
+                    <p className="mt-1.5 text-sm text-zinc-200">{tool.writes}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </ul>
         </div>
       </section>
 

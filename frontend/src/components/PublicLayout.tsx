@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useNavigate } from 'react-router'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 
 import { useAuth } from '../auth/context'
 import { t } from '../i18n/en'
@@ -7,6 +7,7 @@ import { t } from '../i18n/en'
 export function PublicLayout() {
   const { status, user, client } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
 
   const signOut = async () => {
     await client.signOut()
@@ -14,7 +15,9 @@ export function PublicLayout() {
   }
 
   const link = ({ isActive }: { isActive: boolean }) =>
-    isActive ? 'font-semibold text-indigo-700' : 'text-zinc-600 hover:text-zinc-900'
+    `transition-colors duration-200 ${
+      isActive ? 'font-semibold text-indigo-700' : 'text-zinc-600 hover:text-zinc-900'
+    }`
 
   return (
     <div className="min-h-screen bg-zinc-50">
@@ -47,7 +50,10 @@ export function PublicLayout() {
           )}
         </nav>
       </header>
-      <Outlet />
+      {/* Entrada da tela (login → cadastro → recuperar senha…). */}
+      <div key={pathname} className="animate-page-in">
+        <Outlet />
+      </div>
     </div>
   )
 }

@@ -1,4 +1,3 @@
-import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page, test } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 
@@ -10,6 +9,7 @@ import {
   randomEmail,
   userDocStatus,
 } from './emulators'
+import { serious } from './a11y'
 
 // AT-F03-01..04 contra `make dev` (emuladores de Auth e Firestore). Em produção, só o roteiro manual
 // M-F03-01/02 (decisão do PO: nada de contas de teste no Auth compartilhado).
@@ -111,11 +111,7 @@ test.describe('F03 autenticação e conta', () => {
       await page.goto(path)
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
 
-      const { violations } = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa'])
-        .analyze()
-      const serious = violations.filter((v) => v.impact === 'serious' || v.impact === 'critical')
-      expect(serious.map((v) => `${v.id}: ${v.help}`)).toEqual([])
+      expect(await serious(page)).toEqual([])
     })
   }
 })
