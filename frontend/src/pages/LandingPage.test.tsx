@@ -35,6 +35,21 @@ describe('F08-RF-11 public landing page', () => {
   })
 })
 
+describe('F08-RF-11 integrações e recursos novos', () => {
+  it('mostra o que lê e o que escreve no Jira, no Confluence e no GitHub', async () => {
+    render(<App authClient={fakeAuth().client} initialPath="/" />)
+
+    const section = (
+      await screen.findByRole('heading', { name: 'Works where your team already works' })
+    ).closest('section') as HTMLElement
+    for (const name of ['Jira', 'Confluence', 'GitHub'])
+      expect(within(section).getByRole('heading', { name })).toBeInTheDocument()
+    expect(within(section).getAllByText('Writes, after you confirm')).toHaveLength(3)
+    for (const name of ['Grounded in your docs', 'Knows your code', 'Specs in your repository'])
+      expect(screen.getByRole('heading', { name })).toBeInTheDocument()
+  })
+})
+
 describe('F12-RF-03 F12-RF-04 rodapé: ajuda, privacidade e status da API', () => {
   it('tem "Help" (issues do GitHub), "Privacy" e o status da API', async () => {
     render(<App authClient={fakeAuth().client} initialPath="/" />)

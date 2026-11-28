@@ -36,7 +36,7 @@ export function AppLayout() {
   }
 
   const link = ({ isActive }: { isActive: boolean }) =>
-    `flex min-h-11 items-center rounded-lg px-3 text-sm ${
+    `flex min-h-11 items-center rounded-lg px-3 text-sm transition-colors duration-200 ${
       isActive
         ? 'bg-zinc-700 font-medium text-white'
         : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
@@ -151,7 +151,14 @@ export function AppLayout() {
             {t.nav.demo}
           </p>
         )}
-        <Outlet />
+        {/* Entrada da tela ao trocar de seção. A chave é só o 1º segmento: /chat → /chat/:id no 1º
+            envio não remonta o chat (o turno em andamento continua). */}
+        <div
+          key={location.pathname.split('/')[1]}
+          className="flex min-h-0 flex-1 animate-page-in flex-col"
+        >
+          <Outlet />
+        </div>
       </div>
     </div>
   )

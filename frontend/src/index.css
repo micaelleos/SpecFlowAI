@@ -1,7 +1,9 @@
 @import 'tailwindcss';
 
-/* Animações da página inicial (F08-RF-11). Todas somem com prefers-reduced-motion. */
+/* Animações da página inicial (F08-RF-11) e a entrada das telas. Todas somem com prefers-reduced-motion. */
 @theme {
+  --animate-page-in: page-in 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+
   --animate-fade-up: fade-up 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   --animate-pop-in: pop-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   --animate-typing: typing 1.2s ease-in-out infinite;
@@ -13,6 +15,16 @@
     from {
       opacity: 0;
       transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
     }
     to {
       opacity: 1;
@@ -69,6 +81,20 @@
       box-shadow: 0 0 0 10px rgb(99 102 241 / 0);
     }
   }
+}
+
+/* Painéis entram um depois do outro ao abrir a tela (o nome casa com a regra de movimento reduzido). */
+.animate-panel-in {
+  animation: page-in 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.animate-panel-in:nth-of-type(2) {
+  animation-delay: 70ms;
+}
+.animate-panel-in:nth-of-type(3) {
+  animation-delay: 140ms;
+}
+.animate-panel-in:nth-of-type(n + 4) {
+  animation-delay: 210ms;
 }
 
 /* Revelação ao rolar: o componente <Reveal> adiciona .is-visible quando entra na tela. */
