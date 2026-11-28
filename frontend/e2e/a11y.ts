@@ -6,13 +6,11 @@ import type { Page } from '@playwright/test'
  * (entrada da página, painéis) terminarem: no meio da transição a opacidade derruba o contraste.
  */
 export async function serious(page: Page): Promise<string[]> {
-  await page.evaluate(() =>
-    Promise.all(
-      document
-        .getAnimations()
-        .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
-        .map((a) => a.finished.catch(() => undefined)),
-    ),
+  // Em string, como nos outros E2E: o tsconfig dos testes não tem a lib DOM.
+  await page.evaluate(
+    `Promise.all(document.getAnimations()
+      .filter((a) => a.effect && a.effect.getComputedTiming().iterations !== Infinity)
+      .map((a) => a.finished.catch(() => undefined)))`,
   )
   const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
   return violations
